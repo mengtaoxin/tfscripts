@@ -1,0 +1,76 @@
+---
+name: test-driven-development
+description: >-
+  Use Red→Green→Refactor for product behavior changes (features, bug fixes,
+  domain/API logic, regression guards). Not for declarative toolchain config,
+  docs, or mechanical edits. Use when the user mentions TDD, test-first,
+  failing test, feature, bug fix, or behavior change in app code.
+license: MIT
+metadata:
+  author: mengtaoxin
+  version: "1.3.0"
+---
+
+# Test-driven development (for agents)
+
+Prove intended product behavior with a failing test first, then make it pass
+with the smallest change. "Looks right" is not done.
+
+## Scope
+
+**In scope** (full cycle): features and bug fixes in app code; domain rules,
+mapping, validation, non-trivial helpers; HTTP / persistence / CRUD contracts;
+regression guards for bugs with a meaningful automated hook.
+
+**Out of scope** (no new test; never add one that only mirrors a literal you set):
+
+- Docs, comments, formatting.
+- Mechanical moves / renames with unchanged behavior (still run the suites when
+  code changed).
+- Declarative toolchain, build or dev-server config that flips an upstream
+  option (bundler flag, lint rule, `tsconfig` option).
+- Dependency bumps without logic changes; throwaway spikes (redo with the cycle
+  before keeping them).
+
+If unsure: in scope when the repo owns the **logic or contract**, out of scope
+when you only flip an upstream tool's switch.
+
+## Cycle (when in scope)
+
+1. **Red**: state the behavior in one sentence; write or extend a test; run it
+   and confirm it fails for the right reason (not a compile error, bad import or
+   flaky setup).
+2. **Green**: change production code just enough to pass. No drive-by refactors.
+3. **Refactor**: clean up with tests green.
+
+If no meaningful failing test can be written, clarify the requirement instead of
+writing code or a hollow test.
+
+## Layer
+
+- Discover the project's test docs (`docs/testing.md`, `AGENTS.md`) and copy a
+  nearby test's style, naming and location.
+- Pick the lowest layer that locks the behavior; one focused test beats several
+  overlapping ones. End-to-end only for user-visible integration.
+- Prefer real collaborators over mocks when a lower layer expresses the
+  contract cleanly.
+- Verify behavior with automated tests, not by starting a dev server and
+  clicking or screenshotting. Use the browser only for what a test cannot
+  express (visual layout, look and feel), and then prefer an accessibility
+  snapshot over a screenshot.
+
+## Running
+
+Use the project's scripts (`package.json`, `Makefile`, `AGENTS.md`). Run focused
+tests on each Red / Green step; before finishing run the full suites (or the
+project's single finish / verify command) when product code changed, or the
+smallest relevant check for out-of-scope config. Not done until they pass.
+
+## Do not
+
+- Implement first, then write a test that mirrors the code.
+- Assert a config flag equals the value you just set.
+- Change a test to match buggy behavior without a product decision.
+- Churn unrelated tests or snapshots.
+- Use e2e as a substitute for a unit test of a pure helper.
+- Leave Red unobserved, tests failing, or finish on focused runs alone.

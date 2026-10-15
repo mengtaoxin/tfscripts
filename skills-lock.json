@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "javascript-typescript-best-practices": {
+      "source": "mengtaoxin/agent-kit",
+      "sourceType": "github",
+      "skillPath": "skills/javascript-typescript-best-practices/SKILL.md",
+      "computedHash": "a5657d4d0469016ac4c9a36e62e97261c3186cea33110eee7fca5b2cd8c2232f"
+    },
+    "test-driven-development": {
+      "source": "mengtaoxin/agent-kit",
+      "sourceType": "github",
+      "skillPath": "skills/test-driven-development/SKILL.md",
+      "computedHash": "bb2d349d437ce9d044df182fde40f60411788c8cc8ec749de997675950da99c7"
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "tfscripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Small TypeScript CLI scripts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node scripts/generate-bin.mjs",
+    "clean": "rm -rf dist bin",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint --fix .",
+    "fmt": "oxfmt .",
+    "fmt:check": "oxfmt --check"
+  },
+  "devDependencies": {
+    "@mengtaoxin/oxc-config": "^0.4.0",
+    "@types/node": "^24.19.2",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.4"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
