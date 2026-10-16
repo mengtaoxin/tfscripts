@@ -1,12 +1,12 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import type { WakeState } from './state.js';
+import type { KeepAwakeState } from './state.js';
 
-export interface WakeOptions {
+export interface KeepAwakeOptions {
   hours: number;
   screen: boolean;
 }
 
-export function buildCaffeinateArgs(options: WakeOptions): string[] {
+export function buildCaffeinateArgs(options: KeepAwakeOptions): string[] {
   const seconds = String(options.hours * 3600);
   if (options.screen) {
     return ['-i', '-d', '-t', seconds];
@@ -14,15 +14,15 @@ export function buildCaffeinateArgs(options: WakeOptions): string[] {
   return ['-i', '-t', seconds];
 }
 
-export type StopResult = { status: 'inactive' } | { status: 'stopped'; state: WakeState };
+export type StopResult = { status: 'inactive' } | { status: 'stopped'; state: KeepAwakeState };
 
-export interface StopWakeSessionDeps {
-  readActive: () => WakeState | null;
+export interface StopKeepAwakeSessionDeps {
+  readActive: () => KeepAwakeState | null;
   kill: (pid: number) => void;
   clearState: () => void;
 }
 
-export function stopWakeSession(deps: StopWakeSessionDeps): StopResult {
+export function stopKeepAwakeSession(deps: StopKeepAwakeSessionDeps): StopResult {
   const state = deps.readActive();
   if (state === null) {
     return { status: 'inactive' };
@@ -40,7 +40,7 @@ export function stopWakeSession(deps: StopWakeSessionDeps): StopResult {
   return { status: 'stopped', state };
 }
 
-export interface StartWakeSessionDeps {
+export interface StartKeepAwakeSessionDeps {
   hours: number;
   screen: boolean;
   stopExisting: () => StopResult;
@@ -49,15 +49,17 @@ export interface StartWakeSessionDeps {
     args: readonly string[],
     options: { detached: boolean; stdio: 'ignore' },
   ) => Pick<ChildProcess, 'pid' | 'unref'>;
-  writeState: (state: WakeState) => void;
+  writeState: (state: KeepAwakeState) => void;
   now: () => Date;
 }
 
-export interface StartWakeSessionResult extends WakeState {
+export interface StartKeepAwakeSessionResult extends KeepAwakeState {
   replaced: boolean;
 }
 
-export function startWakeSession(deps: StartWakeSessionDeps): StartWakeSessionResult {
+export function startKeepAwakeSession(
+  deps: StartKeepAwakeSessionDeps,
+): StartKeepAwakeSessionResult {
   const stopResult = deps.stopExisting();
   const args = buildCaffeinateArgs({ hours: deps.hours, screen: deps.screen });
   const child = deps.spawn('caffeinate', args, { detached: true, stdio: 'ignore' });
@@ -69,7 +71,7 @@ export function startWakeSession(deps: StartWakeSessionDeps): StartWakeSessionRe
 
   const started = deps.now();
   const ends = new Date(started.getTime() + deps.hours * 3600 * 1000);
-  const state: WakeState = {
+  const state: KeepAwakeState = {
     pid: child.pid,
     hours: deps.hours,
     screen: deps.screen,

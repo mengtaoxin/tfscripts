@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildCaffeinateArgs, startWakeSession, stopWakeSession } from './session.js';
-import type { WakeState } from './state.js';
+import { buildCaffeinateArgs, startKeepAwakeSession, stopKeepAwakeSession } from './session.js';
+import type { KeepAwakeState } from './state.js';
 
 describe('buildCaffeinateArgs', () => {
   it('builds idle-only args when screen is off', () => {
@@ -12,13 +12,13 @@ describe('buildCaffeinateArgs', () => {
   });
 });
 
-describe('stopWakeSession', () => {
+describe('stopKeepAwakeSession', () => {
   it('returns inactive when there is no live session', () => {
     const kill = vi.fn();
     const clearState = vi.fn();
 
     expect(
-      stopWakeSession({
+      stopKeepAwakeSession({
         readActive: () => null,
         kill,
         clearState,
@@ -29,7 +29,7 @@ describe('stopWakeSession', () => {
   });
 
   it('kills the process and clears state when active', () => {
-    const state: WakeState = {
+    const state: KeepAwakeState = {
       pid: 42,
       hours: 4,
       screen: false,
@@ -40,7 +40,7 @@ describe('stopWakeSession', () => {
     const clearState = vi.fn();
 
     expect(
-      stopWakeSession({
+      stopKeepAwakeSession({
         readActive: () => state,
         kill,
         clearState,
@@ -53,9 +53,9 @@ describe('stopWakeSession', () => {
 
 const fixedNow = () => new Date('2026-10-16T01:00:00.000Z');
 
-describe('startWakeSession', () => {
+describe('startKeepAwakeSession', () => {
   it('stops any previous session then starts a new detached caffeinate', () => {
-    const previous: WakeState = {
+    const previous: KeepAwakeState = {
       pid: 10,
       hours: 4,
       screen: false,
@@ -67,7 +67,7 @@ describe('startWakeSession', () => {
     const spawn = vi.fn(() => child);
     const writeState = vi.fn();
 
-    const result = startWakeSession({
+    const result = startKeepAwakeSession({
       hours: 2,
       screen: true,
       stopExisting,

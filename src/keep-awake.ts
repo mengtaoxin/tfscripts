@@ -1,18 +1,18 @@
 import {
-  clearWakeState,
+  clearKeepAwakeState,
   defaultStatePath,
-  readActiveWakeState,
-  writeWakeState,
-} from './lib/wake/state.js';
+  readActiveKeepAwakeState,
+  writeKeepAwakeState,
+} from './lib/keep-awake/state.js';
 import {
   defaultKill,
   defaultSpawn,
-  startWakeSession,
-  stopWakeSession,
-} from './lib/wake/session.js';
-import { parseArgs } from './lib/wake/parse-args.js';
-import { promptWakeOptions } from './lib/wake/prompts.js';
-import { formatInfoActive, HELP_TEXT, INFO_DEFAULT } from './lib/wake/help.js';
+  startKeepAwakeSession,
+  stopKeepAwakeSession,
+} from './lib/keep-awake/session.js';
+import { parseArgs } from './lib/keep-awake/parse-args.js';
+import { promptKeepAwakeOptions } from './lib/keep-awake/prompts.js';
+import { formatInfoActive, HELP_TEXT, INFO_DEFAULT } from './lib/keep-awake/help.js';
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -34,7 +34,7 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (parsed.command === 'info') {
-    const state = readActiveWakeState({ statePath });
+    const state = readActiveKeepAwakeState({ statePath });
     if (state === null) {
       console.log(INFO_DEFAULT);
     } else {
@@ -44,18 +44,18 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (parsed.command === 'stop') {
-    const result = stopWakeSession({
-      readActive: () => readActiveWakeState({ statePath }),
+    const result = stopKeepAwakeSession({
+      readActive: () => readActiveKeepAwakeState({ statePath }),
       kill: defaultKill,
-      clearState: () => clearWakeState({ statePath }),
+      clearState: () => clearKeepAwakeState({ statePath }),
     });
 
     if (result.status === 'inactive') {
-      console.log('No active wake session. System defaults already apply.');
+      console.log('No active keep-awake session. System defaults already apply.');
       return 0;
     }
 
-    console.log('Stopped wake session. System defaults restored.');
+    console.log('Stopped keep-awake session. System defaults restored.');
     return 0;
   }
 
@@ -63,19 +63,19 @@ async function main(argv: readonly string[]): Promise<number> {
   const options =
     parsed.command === 'start' && parsed.mode === 'direct'
       ? { hours: parsed.hours, screen: parsed.screen }
-      : await promptWakeOptions();
+      : await promptKeepAwakeOptions();
 
-  const result = startWakeSession({
+  const result = startKeepAwakeSession({
     hours: options.hours,
     screen: options.screen,
     stopExisting: () =>
-      stopWakeSession({
-        readActive: () => readActiveWakeState({ statePath }),
+      stopKeepAwakeSession({
+        readActive: () => readActiveKeepAwakeState({ statePath }),
         kill: defaultKill,
-        clearState: () => clearWakeState({ statePath }),
+        clearState: () => clearKeepAwakeState({ statePath }),
       }),
     spawn: defaultSpawn,
-    writeState: (state) => writeWakeState({ statePath, state }),
+    writeState: (state) => writeKeepAwakeState({ statePath, state }),
     now: () => new Date(),
   });
 

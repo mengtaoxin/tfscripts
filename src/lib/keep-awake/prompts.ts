@@ -1,11 +1,11 @@
 import { confirm, number } from '@inquirer/prompts';
 
-export interface PromptedWakeOptions {
+export interface PromptedKeepAwakeOptions {
   hours: number;
   screen: boolean;
 }
 
-export async function promptWakeOptions(): Promise<PromptedWakeOptions> {
+export async function promptKeepAwakeOptions(): Promise<PromptedKeepAwakeOptions> {
   const hours = await number({
     message: 'How many hours should the Mac stay awake?',
     default: 4,

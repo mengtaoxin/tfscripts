@@ -48,7 +48,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: 'Missing command. Run "wake help" for usage.',
+      message: 'Missing command. Run "keep-awake help" for usage.',
     };
   }
 
@@ -60,7 +60,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: `Unknown command "${command}". Run "wake help" for usage.`,
+      message: `Unknown command "${command}". Run "keep-awake help" for usage.`,
     };
   }
 

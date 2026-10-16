@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  clearWakeState,
+  clearKeepAwakeState,
   defaultStatePath,
-  readActiveWakeState,
-  writeWakeState,
-  type WakeState,
+  readActiveKeepAwakeState,
+  writeKeepAwakeState,
+  type KeepAwakeState,
 } from './state.js';
 
-const sample: WakeState = {
+const sample: KeepAwakeState = {
   pid: 12345,
   hours: 4,
   screen: false,
@@ -16,12 +16,12 @@ const sample: WakeState = {
 };
 
 describe('defaultStatePath', () => {
-  it('resolves under ~/.tfscripts/wake/wake.json', () => {
-    expect(defaultStatePath('/Users/me')).toBe('/Users/me/.tfscripts/wake/wake.json');
+  it('resolves under ~/.tfscripts/keep-awake/keep-awake.json', () => {
+    expect(defaultStatePath('/Users/me')).toBe('/Users/me/.tfscripts/keep-awake/keep-awake.json');
   });
 });
 
-describe('readActiveWakeState', () => {
+describe('readActiveKeepAwakeState', () => {
   it('returns null when the state file is missing', () => {
     const readFile = vi.fn(() => {
       throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
@@ -29,8 +29,8 @@ describe('readActiveWakeState', () => {
     const isAlive = vi.fn();
 
     expect(
-      readActiveWakeState({
-        statePath: '/tmp/wake.json',
+      readActiveKeepAwakeState({
+        statePath: '/tmp/keep-awake.json',
         readFile,
         isAlive,
       }),
@@ -44,14 +44,14 @@ describe('readActiveWakeState', () => {
     const removeFile = vi.fn();
 
     expect(
-      readActiveWakeState({
-        statePath: '/tmp/wake.json',
+      readActiveKeepAwakeState({
+        statePath: '/tmp/keep-awake.json',
         readFile,
         isAlive,
         removeFile,
       }),
     ).toBeNull();
-    expect(removeFile).toHaveBeenCalledWith('/tmp/wake.json');
+    expect(removeFile).toHaveBeenCalledWith('/tmp/keep-awake.json');
   });
 
   it('returns state when the process is alive', () => {
@@ -59,8 +59,8 @@ describe('readActiveWakeState', () => {
     const isAlive = vi.fn(() => true);
 
     expect(
-      readActiveWakeState({
-        statePath: '/tmp/wake.json',
+      readActiveKeepAwakeState({
+        statePath: '/tmp/keep-awake.json',
         readFile,
         isAlive,
       }),
@@ -68,14 +68,14 @@ describe('readActiveWakeState', () => {
   });
 });
 
-describe('writeWakeState / clearWakeState', () => {
+describe('writeKeepAwakeState / clearKeepAwakeState', () => {
   it('writes JSON and clears via remove', () => {
     const mkdir = vi.fn();
     const writeFile = vi.fn();
     const removeFile = vi.fn();
 
-    writeWakeState({
-      statePath: '/tmp/dir/wake.json',
+    writeKeepAwakeState({
+      statePath: '/tmp/dir/keep-awake.json',
       state: sample,
       mkdir,
       writeFile,
@@ -83,12 +83,12 @@ describe('writeWakeState / clearWakeState', () => {
 
     expect(mkdir).toHaveBeenCalledWith('/tmp/dir', { recursive: true });
     expect(writeFile).toHaveBeenCalledWith(
-      '/tmp/dir/wake.json',
+      '/tmp/dir/keep-awake.json',
       `${JSON.stringify(sample, null, 2)}\n`,
       'utf8',
     );
 
-    clearWakeState({ statePath: '/tmp/dir/wake.json', removeFile });
-    expect(removeFile).toHaveBeenCalledWith('/tmp/dir/wake.json');
+    clearKeepAwakeState({ statePath: '/tmp/dir/keep-awake.json', removeFile });
+    expect(removeFile).toHaveBeenCalledWith('/tmp/dir/keep-awake.json');
   });
 });

@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 
-export interface WakeState {
+export interface KeepAwakeState {
   pid: number;
   hours: number;
   screen: boolean;
@@ -11,7 +11,7 @@ export interface WakeState {
 }
 
 export function defaultStatePath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'wake', 'wake.json');
+  return join(home, '.tfscripts', 'keep-awake', 'keep-awake.json');
 }
 
 function isProcessAlive(pid: number): boolean {
@@ -23,7 +23,7 @@ function isProcessAlive(pid: number): boolean {
   }
 }
 
-function isWakeState(value: unknown): value is WakeState {
+function isKeepAwakeState(value: unknown): value is KeepAwakeState {
   if (value === null || typeof value !== 'object') {
     return false;
   }
@@ -37,14 +37,16 @@ function isWakeState(value: unknown): value is WakeState {
   );
 }
 
-export interface ReadActiveWakeStateDeps {
+export interface ReadActiveKeepAwakeStateDeps {
   statePath: string;
   readFile?: (path: string) => string;
   isAlive?: (pid: number) => boolean;
   removeFile?: (path: string) => void;
 }
 
-export function readActiveWakeState(deps: ReadActiveWakeStateDeps): WakeState | null {
+export function readActiveKeepAwakeState(
+  deps: ReadActiveKeepAwakeStateDeps,
+): KeepAwakeState | null {
   const readFile = deps.readFile ?? ((path) => readFileSync(path, 'utf8'));
   const isAlive = deps.isAlive ?? isProcessAlive;
   const removeFile =
@@ -78,7 +80,7 @@ export function readActiveWakeState(deps: ReadActiveWakeStateDeps): WakeState | 
     return null;
   }
 
-  if (!isWakeState(parsed)) {
+  if (!isKeepAwakeState(parsed)) {
     removeFile(deps.statePath);
     return null;
   }
@@ -91,14 +93,14 @@ export function readActiveWakeState(deps: ReadActiveWakeStateDeps): WakeState | 
   return parsed;
 }
 
-export interface WriteWakeStateDeps {
+export interface WriteKeepAwakeStateDeps {
   statePath: string;
-  state: WakeState;
+  state: KeepAwakeState;
   mkdir?: (path: string, options: { recursive: boolean }) => void;
   writeFile?: (path: string, data: string, encoding: 'utf8') => void;
 }
 
-export function writeWakeState(deps: WriteWakeStateDeps): void {
+export function writeKeepAwakeState(deps: WriteKeepAwakeStateDeps): void {
   const mkdir = deps.mkdir ?? ((path, options) => mkdirSync(path, options));
   const writeFile =
     deps.writeFile ?? ((path, data, encoding) => writeFileSync(path, data, encoding));
@@ -107,12 +109,12 @@ export function writeWakeState(deps: WriteWakeStateDeps): void {
   writeFile(deps.statePath, `${JSON.stringify(deps.state, null, 2)}\n`, 'utf8');
 }
 
-export interface ClearWakeStateDeps {
+export interface ClearKeepAwakeStateDeps {
   statePath: string;
   removeFile?: (path: string) => void;
 }
 
-export function clearWakeState(deps: ClearWakeStateDeps): void {
+export function clearKeepAwakeState(deps: ClearKeepAwakeStateDeps): void {
   const removeFile =
     deps.removeFile ??
     ((path) => {

@@ -12,12 +12,12 @@ describe('parseArgs', () => {
     expect(parseArgs([])).toEqual({
       ok: false,
       reason: 'usage',
-      message: 'Missing command. Run "wake help" for usage.',
+      message: 'Missing command. Run "keep-awake help" for usage.',
     });
     expect(parseArgs(['unknown'])).toEqual({
       ok: false,
       reason: 'usage',
-      message: 'Unknown command "unknown". Run "wake help" for usage.',
+      message: 'Unknown command "unknown". Run "keep-awake help" for usage.',
     });
   });
 

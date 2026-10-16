@@ -1,30 +1,30 @@
-export const HELP_TEXT = `wake — keep this Mac awake for a while
+export const HELP_TEXT = `keep-awake — keep this Mac awake for a while
 
 Usage:
-  wake info
-  wake start --hours <1-24> --screen <yes|no>
-  wake stop
-  wake help
+  keep-awake info
+  keep-awake start --hours <1-24> --screen <yes|no>
+  keep-awake stop
+  keep-awake help
 
 Commands:
-  info    Show whether a managed wake session is active
+  info    Show whether a managed keep-awake session is active
   start   Start keeping the Mac awake (replaces any existing session)
-  stop    Stop the managed wake session and restore defaults
+  stop    Stop the managed keep-awake session and restore defaults
   help    Show this help
 
 Start options:
   --hours <n>       Duration in hours (integer, 1–24)
   --screen <yes|no> Whether to keep the display awake
 
-If either --hours or --screen is omitted, wake prompts interactively
+If either --hours or --screen is omitted, keep-awake prompts interactively
 (defaults: 4 hours, screen off). Partial flags are ignored in that mode.
 
 Examples:
-  wake start --hours 4 --screen no
-  wake start --hours 2 --screen yes
-  wake start
-  wake info
-  wake stop
+  keep-awake start --hours 4 --screen no
+  keep-awake start --hours 2 --screen yes
+  keep-awake start
+  keep-awake info
+  keep-awake stop
 `;
 
 export function formatInfoActive(options: {
@@ -41,7 +41,7 @@ export function formatInfoActive(options: {
   const screenLabel = options.screen ? 'on' : 'off';
 
   return [
-    'Status: keeping awake (managed by wake)',
+    'Status: keeping awake (managed by keep-awake)',
     `Duration: ${options.hours} hour(s)`,
     `Screen: ${screenLabel}`,
     `Started: ${options.startedAt}`,

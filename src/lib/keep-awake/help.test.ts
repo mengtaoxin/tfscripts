@@ -11,7 +11,7 @@ describe('formatInfoActive', () => {
       now: new Date('2026-10-16T02:00:00.000Z'),
     });
 
-    expect(text).toContain('Status: keeping awake (managed by wake)');
+    expect(text).toContain('Status: keeping awake (managed by keep-awake)');
     expect(text).toContain('Duration: 2 hour(s)');
     expect(text).toContain('Screen: on');
     expect(text).toContain('Remaining: about 60 minute(s)');
