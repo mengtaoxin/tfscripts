@@ -1,0 +1,37 @@
+# tfscripts
+
+Useful TypeScript CLI scripts for macOS.
+
+## Scripts
+
+| Script | Description |
+| --- | --- |
+| `hello` | Simple greeting CLI (example / smoke test) |
+| `keep-awake` | Keep the Mac awake for a set duration (optionally keep the display on) |
+
+## Requirements
+
+- macOS
+- Node.js 22+
+
+## Setup
+
+```bash
+npm install
+npm run build
+```
+
+Add the `bin` directory to your `PATH`, or run scripts via:
+
+```bash
+./bin/hello
+./bin/keep-awake help
+```
+
+## Development
+
+```bash
+npm test
+npm run lint
+npm run fmt
+```
