@@ -1,0 +1,34 @@
+import { confirm, number } from '@inquirer/prompts';
+
+export interface PromptedWakeOptions {
+  hours: number;
+  screen: boolean;
+}
+
+export async function promptWakeOptions(): Promise<PromptedWakeOptions> {
+  const hours = await number({
+    message: 'How many hours should the Mac stay awake?',
+    default: 4,
+    min: 1,
+    max: 24,
+    step: 1,
+    required: true,
+    validate: (value) => {
+      if (value === undefined || !Number.isInteger(value)) {
+        return 'Enter an integer from 1 to 24.';
+      }
+      return true;
+    },
+  });
+
+  if (hours === undefined) {
+    throw new Error('Hours is required.');
+  }
+
+  const screen = await confirm({
+    message: 'Keep the screen on?',
+    default: false,
+  });
+
+  return { hours, screen };
+}
