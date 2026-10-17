@@ -1,12 +1,24 @@
-import { confirm, number } from '@inquirer/prompts';
+import { number, select } from '@inquirer/prompts';
 
 export interface PromptedKeepAwakeOptions {
   hours: number;
   screen: boolean;
 }
 
-export async function promptKeepAwakeOptions(): Promise<PromptedKeepAwakeOptions> {
-  const hours = await number({
+export interface PromptKeepAwakeOptionsDeps {
+  askHours: typeof number;
+  askScreen: typeof select;
+}
+
+const defaultDeps: PromptKeepAwakeOptionsDeps = {
+  askHours: number,
+  askScreen: select,
+};
+
+export async function promptKeepAwakeOptions(
+  deps: PromptKeepAwakeOptionsDeps = defaultDeps,
+): Promise<PromptedKeepAwakeOptions> {
+  const hours = await deps.askHours({
     message: 'How many hours should the Mac stay awake?',
     default: 4,
     min: 1,
@@ -25,8 +37,12 @@ export async function promptKeepAwakeOptions(): Promise<PromptedKeepAwakeOptions
     throw new Error('Hours is required.');
   }
 
-  const screen = await confirm({
+  const screen = await deps.askScreen({
     message: 'Keep the screen on?',
+    choices: [
+      { name: 'Yes', value: true },
+      { name: 'No', value: false },
+    ],
     default: false,
   });
 
