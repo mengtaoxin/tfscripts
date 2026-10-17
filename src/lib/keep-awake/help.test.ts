@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatInfoActive } from './help.js';
+import { formatStatusActive } from './help.js';
 
-describe('formatInfoActive', () => {
+describe('formatStatusActive', () => {
   it('reports an active session with remaining minutes', () => {
-    const text = formatInfoActive({
+    const text = formatStatusActive({
       hours: 2,
       screen: true,
       startedAt: '2026-10-16T01:00:00.000Z',

@@ -1,13 +1,13 @@
 export const HELP_TEXT = `keep-awake — keep this Mac awake for a while
 
 Usage:
-  keep-awake info
+  keep-awake status
   keep-awake start --hours <1-24> --screen <yes|no>
   keep-awake stop
   keep-awake help
 
 Commands:
-  info    Show whether a managed keep-awake session is active
+  status  Show whether a managed keep-awake session is active
   start   Start keeping the Mac awake (replaces any existing session)
   stop    Stop the managed keep-awake session and restore defaults
   help    Show this help
@@ -23,11 +23,11 @@ Examples:
   keep-awake start --hours 4 --screen no
   keep-awake start --hours 2 --screen yes
   keep-awake start
-  keep-awake info
+  keep-awake status
   keep-awake stop
 `;
 
-export function formatInfoActive(options: {
+export function formatStatusActive(options: {
   hours: number;
   screen: boolean;
   startedAt: string;
@@ -50,4 +50,4 @@ export function formatInfoActive(options: {
   ].join('\n');
 }
 
-export const INFO_DEFAULT = 'Status: following system default sleep settings.';
+export const STATUS_DEFAULT = 'Status: following system default sleep settings.';

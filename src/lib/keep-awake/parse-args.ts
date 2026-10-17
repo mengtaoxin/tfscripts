@@ -1,5 +1,5 @@
 export type ParseSuccess =
-  | { ok: true; command: 'info' | 'stop' | 'help' }
+  | { ok: true; command: 'status' | 'stop' | 'help' }
   | { ok: true; command: 'start'; mode: 'interactive' }
   | { ok: true; command: 'start'; mode: 'direct'; hours: number; screen: boolean };
 
@@ -52,7 +52,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     };
   }
 
-  if (command === 'info' || command === 'stop' || command === 'help') {
+  if (command === 'status' || command === 'stop' || command === 'help') {
     return { ok: true, command };
   }
 

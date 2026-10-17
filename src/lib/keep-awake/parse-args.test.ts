@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { parseArgs } from './parse-args.js';
 
 describe('parseArgs', () => {
-  it('parses info, stop, and help subcommands', () => {
-    expect(parseArgs(['info'])).toEqual({ ok: true, command: 'info' });
+  it('parses status, stop, and help subcommands', () => {
+    expect(parseArgs(['status'])).toEqual({ ok: true, command: 'status' });
     expect(parseArgs(['stop'])).toEqual({ ok: true, command: 'stop' });
     expect(parseArgs(['help'])).toEqual({ ok: true, command: 'help' });
   });

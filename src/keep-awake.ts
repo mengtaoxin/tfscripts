@@ -12,7 +12,7 @@ import {
 } from './lib/keep-awake/session.js';
 import { parseArgs } from './lib/keep-awake/parse-args.js';
 import { promptKeepAwakeOptions } from './lib/keep-awake/prompts.js';
-import { formatInfoActive, HELP_TEXT, INFO_DEFAULT } from './lib/keep-awake/help.js';
+import { formatStatusActive, HELP_TEXT, STATUS_DEFAULT } from './lib/keep-awake/help.js';
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -33,12 +33,12 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  if (parsed.command === 'info') {
+  if (parsed.command === 'status') {
     const state = readActiveKeepAwakeState({ statePath });
     if (state === null) {
-      console.log(INFO_DEFAULT);
+      console.log(STATUS_DEFAULT);
     } else {
-      console.log(formatInfoActive(state));
+      console.log(formatStatusActive(state));
     }
     return 0;
   }
@@ -59,7 +59,7 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  // Remaining command is start (info/stop/help returned above).
+  // Remaining command is start (status/stop/help returned above).
   const options =
     parsed.command === 'start' && parsed.mode === 'direct'
       ? { hours: parsed.hours, screen: parsed.screen }
