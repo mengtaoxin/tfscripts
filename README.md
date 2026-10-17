@@ -4,10 +4,11 @@ Useful TypeScript CLI scripts for macOS.
 
 ## Scripts
 
-| Script | Description |
-| --- | --- |
-| `hello` | Simple greeting CLI (example / smoke test) |
-| `keep-awake` | Keep the Mac awake for a set duration (optionally keep the display on) |
+| Script          | Description                                                                  |
+| --------------- | ---------------------------------------------------------------------------- |
+| `hello`         | Simple greeting CLI (example / smoke test)                                   |
+| `keep-awake`    | Keep the Mac awake for a set duration (optionally keep the display on)       |
+| `ai-git-submit` | Generate a Conventional Commits message via LLM, commit, optionally add/push |
 
 ## Requirements
 
