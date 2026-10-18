@@ -1,18 +1,18 @@
 export const HELP_TEXT = `keep-awake — keep this Mac awake for a while
 
 Usage:
+  keep-awake [--hours <1-24> --screen <yes|no>]
   keep-awake status
-  keep-awake start --hours <1-24> --screen <yes|no>
   keep-awake stop
   keep-awake help
 
 Commands:
-  status  Show whether a managed keep-awake session is active
-  start   Start keeping the Mac awake (replaces any existing session)
-  stop    Stop the managed keep-awake session and restore defaults
-  help    Show this help
+  (default) Start keeping the Mac awake (replaces any existing session)
+  status    Show whether a managed keep-awake session is active
+  stop      Stop the managed keep-awake session and restore defaults
+  help      Show this help
 
-Start options:
+Options:
   --hours <n>       Duration in hours (integer, 1–24)
   --screen <yes|no> Whether to keep the display awake
 
@@ -20,9 +20,9 @@ If either --hours or --screen is omitted, keep-awake prompts interactively
 (defaults: 4 hours, screen off). Partial flags are ignored in that mode.
 
 Examples:
-  keep-awake start --hours 4 --screen no
-  keep-awake start --hours 2 --screen yes
-  keep-awake start
+  keep-awake --hours 4 --screen no
+  keep-awake --hours 2 --screen yes
+  keep-awake
   keep-awake status
   keep-awake stop
 `;

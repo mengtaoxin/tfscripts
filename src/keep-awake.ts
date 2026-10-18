@@ -59,7 +59,7 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  // Remaining command is start (status/stop/help returned above).
+  // Default action: start a session (status/stop/help returned above).
   const options =
     parsed.command === 'start' && parsed.mode === 'direct'
       ? { hours: parsed.hours, screen: parsed.screen }

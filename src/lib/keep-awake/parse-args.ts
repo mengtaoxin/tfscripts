@@ -41,31 +41,9 @@ function readFlag(args: readonly string[], name: string): string | undefined {
   return args[index + 1];
 }
 
-export function parseArgs(argv: readonly string[]): ParseResult {
-  const [command, ...rest] = argv;
-
-  if (command === undefined) {
-    return {
-      ok: false,
-      reason: 'usage',
-      message: 'Missing command. Run "keep-awake help" for usage.',
-    };
-  }
-
-  if (command === 'status' || command === 'stop' || command === 'help') {
-    return { ok: true, command };
-  }
-
-  if (command !== 'start') {
-    return {
-      ok: false,
-      reason: 'usage',
-      message: `Unknown command "${command}". Run "keep-awake help" for usage.`,
-    };
-  }
-
-  const hoursRaw = readFlag(rest, '--hours');
-  const screenRaw = readFlag(rest, '--screen');
+function parseStartOptions(args: readonly string[]): ParseResult {
+  const hoursRaw = readFlag(args, '--hours');
+  const screenRaw = readFlag(args, '--screen');
   const hasHours = hoursRaw !== undefined;
   const hasScreen = screenRaw !== undefined;
 
@@ -92,4 +70,22 @@ export function parseArgs(argv: readonly string[]): ParseResult {
   }
 
   return { ok: true, command: 'start', mode: 'direct', hours, screen };
+}
+
+export function parseArgs(argv: readonly string[]): ParseResult {
+  const first = argv[0];
+
+  if (first === undefined || first.startsWith('--')) {
+    return parseStartOptions(argv);
+  }
+
+  if (first === 'status' || first === 'stop' || first === 'help') {
+    return { ok: true, command: first };
+  }
+
+  return {
+    ok: false,
+    reason: 'usage',
+    message: `Unknown command "${first}". Run "keep-awake help" for usage.`,
+  };
 }
