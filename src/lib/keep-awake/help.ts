@@ -27,6 +27,15 @@ Examples:
   keep-awake stop
 `;
 
+/** Local wall-clock time, no timezone suffix (e.g. `2026-10-20 01:30:22`). */
+export function formatLocalDateTime(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    ` ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+}
+
 export function formatStatusActive(options: {
   hours: number;
   screen: boolean;
@@ -44,8 +53,8 @@ export function formatStatusActive(options: {
     'Status: keeping awake (managed by keep-awake)',
     `Duration: ${options.hours} hour(s)`,
     `Screen: ${screenLabel}`,
-    `Started: ${options.startedAt}`,
-    `Ends: ${options.endsAt}`,
+    `Started: ${formatLocalDateTime(new Date(options.startedAt))}`,
+    `Ends: ${formatLocalDateTime(new Date(options.endsAt))}`,
     `Remaining: about ${remainingMinutes} minute(s)`,
   ].join('\n');
 }

@@ -12,7 +12,12 @@ import {
 } from './lib/keep-awake/session.js';
 import { parseArgs } from './lib/keep-awake/parse-args.js';
 import { promptKeepAwakeOptions } from './lib/keep-awake/prompts.js';
-import { formatStatusActive, HELP_TEXT, STATUS_DEFAULT } from './lib/keep-awake/help.js';
+import {
+  formatLocalDateTime,
+  formatStatusActive,
+  HELP_TEXT,
+  STATUS_DEFAULT,
+} from './lib/keep-awake/help.js';
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -82,7 +87,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const screenLabel = result.screen ? 'on' : 'off';
   const replacedNote = result.replaced ? ' (replaced previous session)' : '';
   console.log(`Keeping awake for ${result.hours} hour(s); screen ${screenLabel}.${replacedNote}`);
-  console.log(`Ends at ${result.endsAt}`);
+  console.log(`Ends at ${formatLocalDateTime(new Date(result.endsAt))}`);
   return 0;
 }
 
