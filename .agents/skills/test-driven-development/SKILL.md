@@ -8,7 +8,7 @@ description: >-
 license: MIT
 metadata:
   author: mengtaoxin
-  version: "1.3.0"
+  version: "1.5.0"
 ---
 
 # Test-driven development (for agents)
@@ -54,10 +54,9 @@ writing code or a hollow test.
   overlapping ones. End-to-end only for user-visible integration.
 - Prefer real collaborators over mocks when a lower layer expresses the
   contract cleanly.
-- Verify behavior with automated tests, not by starting a dev server and
-  clicking or screenshotting. Use the browser only for what a test cannot
-  express (visual layout, look and feel), and then prefer an accessibility
-  snapshot over a screenshot.
+- Verify behavior with automated tests. When the contract is page structure,
+  assert it through the project's test runner. A check that only a person can
+  judge by looking stays outside this cycle.
 
 ## Running
 

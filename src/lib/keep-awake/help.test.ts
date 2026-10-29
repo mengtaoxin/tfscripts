@@ -5,11 +5,8 @@ describe('formatLocalDateTime', () => {
   it('formats a date as local wall-clock time without a timezone suffix', () => {
     const date = new Date('2026-10-19T17:30:22.658Z');
     const pad = (n: number) => String(n).padStart(2, '0');
-    const expected = [
-      date.getFullYear(),
-      pad(date.getMonth() + 1),
-      pad(date.getDate()),
-    ].join('-') +
+    const expected =
+      [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
       ' ' +
       [pad(date.getHours()), pad(date.getMinutes()), pad(date.getSeconds())].join(':');
 
