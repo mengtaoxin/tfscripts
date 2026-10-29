@@ -44,7 +44,7 @@ async function ensurePathExists(
   try {
     await accessPath(path);
   } catch {
-    throw new Error(`路径不存在: ${path}`);
+    throw new Error(`path does not exist: ${path}`);
   }
 }
 
@@ -94,13 +94,13 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
   try {
     branch = await getBranchName(git);
   } catch (error) {
-    return failResult(entry, branch, `不是 git 仓库: ${errorMessage(error)}`);
+    return failResult(entry, branch, `not a git repository: ${errorMessage(error)}`);
   }
 
   try {
     await getUpstreamRef(git);
   } catch {
-    return failResult(entry, branch, '当前分支没有设置 upstream');
+    return failResult(entry, branch, 'current branch has no upstream');
   }
 
   try {
@@ -109,7 +109,7 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
     return failResult(
       entry,
       branch,
-      isNetworkError(error) ? `网络错误: ${errorMessage(error)}` : errorMessage(error),
+      isNetworkError(error) ? `network error: ${errorMessage(error)}` : errorMessage(error),
     );
   }
 
@@ -153,7 +153,7 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
             // leave stash if pop fails after abort
           }
         }
-        return failResult(entry, branch, '本地与云端冲突');
+        return failResult(entry, branch, 'local and remote conflict');
       }
       throw error;
     }
@@ -163,9 +163,9 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
         await stashPop(git);
       } catch (error) {
         if (isConflictError(error)) {
-          return failResult(entry, branch, '本地与云端冲突');
+          return failResult(entry, branch, 'local and remote conflict');
         }
-        return failResult(entry, branch, `恢复本地改动失败: ${errorMessage(error)}`);
+        return failResult(entry, branch, `failed to restore local changes: ${errorMessage(error)}`);
       }
     }
 

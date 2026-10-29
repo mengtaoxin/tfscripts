@@ -1,23 +1,61 @@
 import type { SyncOneResult, SyncStatus } from './sync-one.js';
 
+const HEADER_REPO = 'REPO';
+const HEADER_BRANCH = 'BRANCH';
+const HEADER_STATUS = 'STATUS';
+const COLUMN_GAP = '  ';
+
 export function statusLabel(status: SyncStatus): string {
   switch (status) {
     case 'up-to-date':
-      return '✓ 无需更新';
+      return '✓ up to date';
     case 'updated':
-      return '↑ 成功拉取更新';
+      return '↑ updated';
     case 'failed':
-      return '✗ 拉取失败';
+      return '✗ failed';
   }
 }
 
-export function formatResultLine(result: SyncOneResult): string {
+function branchText(result: SyncOneResult): string {
+  return result.branch || '-';
+}
+
+function statusText(result: SyncOneResult): string {
   const label = statusLabel(result.status);
-  const branch = result.branch || '-';
   if (result.status === 'failed' && result.reason) {
-    return `${result.name}    ${branch}    ${label}: ${result.reason}`;
+    return `${label}: ${result.reason}`;
   }
-  return `${result.name}    ${branch}    ${label}`;
+  return label;
+}
+
+function pad(value: string, width: number): string {
+  return value.padEnd(width, ' ');
+}
+
+export function formatResultTable(results: readonly SyncOneResult[]): string[] {
+  let nameWidth = HEADER_REPO.length;
+  let branchWidth = HEADER_BRANCH.length;
+
+  for (const result of results) {
+    nameWidth = Math.max(nameWidth, result.name.length);
+    branchWidth = Math.max(branchWidth, branchText(result).length);
+  }
+
+  const header = [pad(HEADER_REPO, nameWidth), pad(HEADER_BRANCH, branchWidth), HEADER_STATUS].join(
+    COLUMN_GAP,
+  );
+
+  const rows = results.map((result) =>
+    [pad(result.name, nameWidth), pad(branchText(result), branchWidth), statusText(result)].join(
+      COLUMN_GAP,
+    ),
+  );
+
+  return [header, ...rows];
+}
+
+export function formatProgressLine(completed: number, total: number): string {
+  return `repo-sync processing: ${completed}/${total}`;
 }
 
 export function formatSummary(results: readonly SyncOneResult[]): string {
@@ -33,5 +71,5 @@ export function formatSummary(results: readonly SyncOneResult[]): string {
       failed += 1;
     }
   }
-  return `汇总: ${upToDate} 无需更新 / ${updated} 已更新 / ${failed} 失败`;
+  return `Summary: ${results.length} repos / ${upToDate} up to date / ${updated} updated / ${failed} failed`;
 }

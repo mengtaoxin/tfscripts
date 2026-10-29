@@ -134,7 +134,7 @@ describe('syncOne', () => {
 
     expect(result).toMatchObject({
       status: 'failed',
-      reason: '本地与云端冲突',
+      reason: 'local and remote conflict',
     });
     expect(execFile).toHaveBeenCalledWith('git', ['merge', '--abort'], expect.any(Object));
   });
@@ -158,7 +158,7 @@ describe('syncOne', () => {
 
     expect(result).toMatchObject({
       status: 'failed',
-      reason: '当前分支没有设置 upstream',
+      reason: 'current branch has no upstream',
     });
   });
 
@@ -238,7 +238,7 @@ describe('syncOne', () => {
 
     expect(result).toMatchObject({
       status: 'failed',
-      reason: '路径不存在: /repos/repo-1',
+      reason: 'path does not exist: /repos/repo-1',
     });
   });
 });
