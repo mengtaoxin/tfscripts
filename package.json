@@ -7,13 +7,15 @@
   "scripts": {
     "build": "tsc && node scripts/generate-bin.mjs",
     "clean": "rm -rf dist bin",
-    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
-    "fmt": "oxfmt .",
-    "fmt:check": "oxfmt --check"
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check",
+    "check": "npm run format:check && npm run lint && npm run type-check",
+    "verify": "npm run check && npm test"
   },
   "dependencies": {
     "@inquirer/prompts": "^8.7.3",

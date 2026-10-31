@@ -34,7 +34,5 @@ Add the `bin` directory to your `PATH`, or run scripts via:
 ## Development
 
 ```bash
-npm test
-npm run lint
-npm run fmt
+npm run verify
 ```
