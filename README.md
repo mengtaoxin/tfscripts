@@ -4,13 +4,14 @@ Useful TypeScript CLI scripts for macOS.
 
 ## Scripts
 
-| Script          | Description                                                                     |
-| --------------- | ------------------------------------------------------------------------------- |
-| `hello`         | Simple greeting CLI (example / smoke test)                                      |
-| `keep-awake`    | Keep the Mac awake for a set duration (optionally keep the display on)          |
-| `ai-git-submit` | Generate a Conventional Commits message via LLM, commit, optionally add/push    |
-| `repos`         | Multi-repo helper: `update` pulls current-branch upstream; `check` shows status |
-| `retry`         | Re-run a shell command until it exits 0, waiting a fixed interval               |
+| Script           | Description                                                                     |
+| ---------------- | ------------------------------------------------------------------------------- |
+| `hello`          | Simple greeting CLI (example / smoke test)                                      |
+| `keep-awake`     | Keep the Mac awake for a set duration (optionally keep the display on)          |
+| `ai-git-submit`  | Generate a Conventional Commits message via LLM, commit, optionally add/push    |
+| `repos`          | Multi-repo helper: `update` pulls current-branch upstream; `check` shows status |
+| `retry`          | Re-run a shell command until it exits 0, waiting a fixed interval               |
+| `open-in-vscode` | Open a folder in VS Code by path or alias (`--reuse-window` defaults to yes)    |
 
 ## Requirements
 
