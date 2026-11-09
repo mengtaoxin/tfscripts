@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  countAheadUpstream,
   countBehindUpstream,
+  countDirtyLines,
   errorMessage,
   fetchUpstream,
   getBranchName,
@@ -14,7 +16,7 @@ import {
   stashPush,
 } from './git.js';
 
-describe('repo-sync git helpers', () => {
+describe('repos git helpers', () => {
   it('getBranchName returns the current branch', async () => {
     const execFile = vi.fn().mockResolvedValue({ stdout: 'main\n', stderr: '' });
     await expect(getBranchName({ execFile, cwd: '/repo' })).resolves.toBe('main');
@@ -41,6 +43,37 @@ describe('repo-sync git helpers', () => {
     await expect(countBehindUpstream({ execFile })).resolves.toBe(3);
   });
 
+  it('countAheadUpstream parses rev-list count for local commits', async () => {
+    const execFile = vi.fn().mockResolvedValue({ stdout: '2\n', stderr: '' });
+    await expect(countAheadUpstream({ execFile })).resolves.toBe(2);
+    expect(execFile).toHaveBeenCalledWith(
+      'git',
+      ['rev-list', '--count', '@{u}..HEAD'],
+      expect.any(Object),
+    );
+  });
+
+  it('countDirtyLines sums tracked numstat and untracked file lines', async () => {
+    const readFile = vi.fn(async (path: string) => {
+      if (path.endsWith('new.ts')) {
+        return 'a\nb\nc\n';
+      }
+      throw new Error(`unexpected path: ${path}`);
+    });
+    const execFile = vi.fn(async (_file: string, args: readonly string[]) => {
+      const joined = args.join(' ');
+      if (joined === 'diff --numstat HEAD') {
+        return { stdout: '3\t1\ta.ts\n0\t2\tb.ts\n', stderr: '' };
+      }
+      if (joined === 'ls-files -o --exclude-standard') {
+        return { stdout: 'new.ts\n', stderr: '' };
+      }
+      throw new Error(`unexpected git args: ${joined}`);
+    });
+
+    await expect(countDirtyLines({ execFile, cwd: '/repo', readFile })).resolves.toBe(9);
+  });
+
   it('isWorkingTreeDirty is true when porcelain is non-empty', async () => {
     const execFile = vi.fn().mockResolvedValue({ stdout: ' M a.ts\n', stderr: '' });
     await expect(isWorkingTreeDirty({ execFile })).resolves.toBe(true);
@@ -49,13 +82,13 @@ describe('repo-sync git helpers', () => {
   it('stash/merge helpers invoke expected git args', async () => {
     const execFile = vi.fn().mockResolvedValue({ stdout: '', stderr: '' });
     const deps = { execFile, cwd: '/repo' };
-    await stashPush(deps, 'repo-sync');
+    await stashPush(deps, 'repos');
     await mergeUpstream(deps);
     await stashPop(deps);
     await mergeAbort(deps);
     expect(execFile).toHaveBeenCalledWith(
       'git',
-      ['stash', 'push', '--include-untracked', '-m', 'repo-sync'],
+      ['stash', 'push', '--include-untracked', '-m', 'repos'],
       expect.any(Object),
     );
     expect(execFile).toHaveBeenCalledWith(

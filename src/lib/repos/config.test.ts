@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { defaultSettingsPath, loadSettings, ConfigError } from './config.js';
 
 describe('defaultSettingsPath', () => {
-  it('resolves under ~/.tfscripts/repo-sync/settings.json', () => {
-    expect(defaultSettingsPath('/home/me')).toBe('/home/me/.tfscripts/repo-sync/settings.json');
+  it('resolves under ~/.tfscripts/repos/settings.json', () => {
+    expect(defaultSettingsPath('/home/me')).toBe('/home/me/.tfscripts/repos/settings.json');
   });
 });
 

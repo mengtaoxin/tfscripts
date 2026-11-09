@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatProgressLine, formatResultTable, formatSummary, statusLabel } from './format.js';
+import {
+  formatCheckTable,
+  formatProgressLine,
+  formatResultTable,
+  formatSummary,
+  statusLabel,
+} from './format.js';
+import type { CheckOneResult } from './check-one.js';
 import type { SyncOneResult } from './sync-one.js';
 
 describe('format', () => {
@@ -45,10 +52,10 @@ describe('format', () => {
   });
 
   it('formats an in-place progress line', () => {
-    expect(formatProgressLine(0, 23)).toBe('repo-sync processing: 0/23');
-    expect(formatProgressLine(1, 20)).toBe('repo-sync processing: 1/20');
-    expect(formatProgressLine(3, 20)).toBe('repo-sync processing: 3/20');
-    expect(formatProgressLine(19, 20)).toBe('repo-sync processing: 19/20');
+    expect(formatProgressLine(0, 23)).toBe('repos processing: 0/23');
+    expect(formatProgressLine(1, 20)).toBe('repos processing: 1/20');
+    expect(formatProgressLine(3, 20)).toBe('repos processing: 3/20');
+    expect(formatProgressLine(19, 20)).toBe('repos processing: 19/20');
   });
 
   it('formats a summary line with total repo count', () => {
@@ -60,5 +67,45 @@ describe('format', () => {
         { name: 'd', path: '/d', branch: 'main', status: 'failed', reason: 'y' },
       ]),
     ).toBe('Summary: 4 repos / 1 up to date / 1 updated / 2 failed');
+  });
+
+  it('formats a check table with dashes for zero counts', () => {
+    const results: CheckOneResult[] = [
+      {
+        name: 'repo-1',
+        path: '/r/repo-1',
+        branch: 'main',
+        status: 'ok',
+        remoteBehind: 0,
+        localAhead: 0,
+        dirtyLines: 0,
+      },
+      {
+        name: 'my-long-repo',
+        path: '/r/my-long-repo',
+        branch: 'feature/x',
+        status: 'ok',
+        remoteBehind: 3,
+        localAhead: 1,
+        dirtyLines: 12,
+      },
+      {
+        name: 'repo-3',
+        path: '/r/repo-3',
+        branch: 'develop',
+        status: 'failed',
+        remoteBehind: 0,
+        localAhead: 0,
+        dirtyLines: 0,
+        reason: 'current branch has no upstream',
+      },
+    ];
+
+    expect(formatCheckTable(results)).toEqual([
+      'REPO          REMOTE  LOCAL AHEAD  DIRTY LINES',
+      'repo-1        -       -            -',
+      'my-long-repo  3       1            12',
+      'repo-3        ✗ failed: current branch has no upstream',
+    ]);
   });
 });

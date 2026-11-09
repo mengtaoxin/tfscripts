@@ -1,8 +1,12 @@
+import type { CheckOneResult } from './check-one.js';
 import type { SyncOneResult, SyncStatus } from './sync-one.js';
 
 const HEADER_REPO = 'REPO';
 const HEADER_BRANCH = 'BRANCH';
 const HEADER_STATUS = 'STATUS';
+const HEADER_REMOTE = 'REMOTE';
+const HEADER_LOCAL_AHEAD = 'LOCAL AHEAD';
+const HEADER_DIRTY_LINES = 'DIRTY LINES';
 const COLUMN_GAP = '  ';
 
 export function statusLabel(status: SyncStatus): string {
@@ -55,7 +59,47 @@ export function formatResultTable(results: readonly SyncOneResult[]): string[] {
 }
 
 export function formatProgressLine(completed: number, total: number): string {
-  return `repo-sync processing: ${completed}/${total}`;
+  return `repos processing: ${completed}/${total}`;
+}
+
+function countOrDash(value: number): string {
+  return value === 0 ? '-' : String(value);
+}
+
+export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
+  let nameWidth = HEADER_REPO.length;
+  let remoteWidth = HEADER_REMOTE.length;
+  let aheadWidth = HEADER_LOCAL_AHEAD.length;
+
+  for (const result of results) {
+    nameWidth = Math.max(nameWidth, result.name.length);
+    if (result.status === 'ok') {
+      remoteWidth = Math.max(remoteWidth, countOrDash(result.remoteBehind).length);
+      aheadWidth = Math.max(aheadWidth, countOrDash(result.localAhead).length);
+    }
+  }
+
+  const header = [
+    pad(HEADER_REPO, nameWidth),
+    pad(HEADER_REMOTE, remoteWidth),
+    pad(HEADER_LOCAL_AHEAD, aheadWidth),
+    HEADER_DIRTY_LINES,
+  ].join(COLUMN_GAP);
+
+  const rows = results.map((result) => {
+    if (result.status === 'failed') {
+      const reason = result.reason ? `: ${result.reason}` : '';
+      return `${pad(result.name, nameWidth)}${COLUMN_GAP}✗ failed${reason}`;
+    }
+    return [
+      pad(result.name, nameWidth),
+      pad(countOrDash(result.remoteBehind), remoteWidth),
+      pad(countOrDash(result.localAhead), aheadWidth),
+      countOrDash(result.dirtyLines),
+    ].join(COLUMN_GAP);
+  });
+
+  return [header, ...rows];
 }
 
 export function formatSummary(results: readonly SyncOneResult[]): string {

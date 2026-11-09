@@ -39,13 +39,13 @@ describe('runRepoSync', () => {
     });
 
     await vi.waitFor(() => {
-      expect(progressUpdates).toEqual(['repo-sync processing: 0/2']);
+      expect(progressUpdates).toEqual(['repos processing: 0/2']);
     });
     expect(lines).toEqual([]);
 
     resolve2(results[1]!);
     await vi.waitFor(() => {
-      expect(progressUpdates).toEqual(['repo-sync processing: 0/2', 'repo-sync processing: 1/2']);
+      expect(progressUpdates).toEqual(['repos processing: 0/2', 'repos processing: 1/2']);
     });
     expect(lines).toEqual([]);
 
@@ -54,9 +54,9 @@ describe('runRepoSync', () => {
 
     expect(exit.exitCode).toBe(0);
     expect(progressUpdates).toEqual([
-      'repo-sync processing: 0/2',
-      'repo-sync processing: 1/2',
-      'repo-sync processing: 2/2',
+      'repos processing: 0/2',
+      'repos processing: 1/2',
+      'repos processing: 2/2',
     ]);
     expect(endProgress).toHaveBeenCalledOnce();
     expect(lines).toEqual([

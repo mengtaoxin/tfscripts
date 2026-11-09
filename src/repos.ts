@@ -1,6 +1,7 @@
-import { parseArgs } from './lib/repo-sync/parse-args.js';
-import { HELP_TEXT } from './lib/repo-sync/help.js';
-import { runRepoSync } from './lib/repo-sync/run.js';
+import { parseArgs } from './lib/repos/parse-args.js';
+import { HELP_TEXT } from './lib/repos/help.js';
+import { runRepoSync } from './lib/repos/run.js';
+import { runRepoCheck } from './lib/repos/run-check.js';
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -17,6 +18,11 @@ async function main(argv: readonly string[]): Promise<number> {
   if (parsed.command === 'help') {
     console.log(HELP_TEXT.trimEnd());
     return 0;
+  }
+
+  if (parsed.command === 'check') {
+    const result = await runRepoCheck();
+    return result.exitCode;
   }
 
   const result = await runRepoSync();

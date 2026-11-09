@@ -1,4 +1,6 @@
 import { execFile } from 'node:child_process';
+import { readFile as readFileFs } from 'node:fs/promises';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
@@ -9,9 +11,12 @@ export type ExecFileFn = (
   options?: { cwd?: string; maxBuffer?: number },
 ) => Promise<{ stdout: string; stderr: string }>;
 
+export type ReadFileFn = (path: string) => Promise<string>;
+
 export interface GitDeps {
   execFile?: ExecFileFn;
   cwd?: string;
+  readFile?: ReadFileFn;
 }
 
 const defaultExecFile: ExecFileFn = async (file, args, options) =>
@@ -54,6 +59,75 @@ export async function countBehindUpstream(deps: GitDeps): Promise<number> {
   const { stdout } = await git(deps, ['rev-list', '--count', 'HEAD..@{u}']);
   const count = Number.parseInt(stdout.trim(), 10);
   return Number.isFinite(count) ? count : 0;
+}
+
+export async function countAheadUpstream(deps: GitDeps): Promise<number> {
+  const { stdout } = await git(deps, ['rev-list', '--count', '@{u}..HEAD']);
+  const count = Number.parseInt(stdout.trim(), 10);
+  return Number.isFinite(count) ? count : 0;
+}
+
+function parseNumstatLines(stdout: string): number {
+  let total = 0;
+  for (const line of stdout.split('\n')) {
+    const trimmed = line.trim();
+    if (trimmed === '') {
+      continue;
+    }
+    const [addedRaw, deletedRaw] = trimmed.split('\t');
+    const added = addedRaw === '-' ? 0 : Number.parseInt(addedRaw ?? '', 10);
+    const deleted = deletedRaw === '-' ? 0 : Number.parseInt(deletedRaw ?? '', 10);
+    if (Number.isFinite(added)) {
+      total += added;
+    }
+    if (Number.isFinite(deleted)) {
+      total += deleted;
+    }
+  }
+  return total;
+}
+
+function countTextLines(contents: string): number {
+  if (contents === '') {
+    return 0;
+  }
+  const normalized = contents.endsWith('\n') ? contents.slice(0, -1) : contents;
+  if (normalized === '') {
+    return 0;
+  }
+  return normalized.split('\n').length;
+}
+
+export async function countDirtyLines(deps: GitDeps): Promise<number> {
+  const resolved = withDefaults(deps);
+  const readFile = deps.readFile ?? ((path) => readFileFs(path, 'utf8'));
+  const cwd = resolved.cwd ?? process.cwd();
+
+  const { stdout: numstat } = await git(deps, ['diff', '--numstat', 'HEAD']);
+  let total = parseNumstatLines(numstat);
+
+  const { stdout: untrackedStdout } = await git(deps, ['ls-files', '-o', '--exclude-standard']);
+  const untracked = untrackedStdout
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const untrackedCounts = await Promise.all(
+    untracked.map(async (relativePath) => {
+      try {
+        const contents = await readFile(join(cwd, relativePath));
+        return countTextLines(contents);
+      } catch {
+        // skip unreadable untracked paths (e.g. directories)
+        return 0;
+      }
+    }),
+  );
+  for (const count of untrackedCounts) {
+    total += count;
+  }
+
+  return total;
 }
 
 export async function isWorkingTreeDirty(deps: GitDeps): Promise<boolean> {

@@ -100,7 +100,7 @@ describe('syncOne', () => {
     expect(result.status).toBe('updated');
     expect(execFile).toHaveBeenCalledWith(
       'git',
-      ['stash', 'push', '--include-untracked', '-m', 'repo-sync autostash'],
+      ['stash', 'push', '--include-untracked', '-m', 'repos autostash'],
       expect.any(Object),
     );
     expect(execFile).toHaveBeenCalledWith('git', ['stash', 'pop'], expect.any(Object));

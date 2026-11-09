@@ -19,7 +19,7 @@ export interface RepoSyncSettings {
 }
 
 export function defaultSettingsPath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'repo-sync', 'settings.json');
+  return join(home, '.tfscripts', 'repos', 'settings.json');
 }
 
 function expandHome(path: string, home: string): string {
@@ -48,7 +48,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       throw new ConfigError(
-        `Settings file not found: ${deps.settingsPath}. Create ~/.tfscripts/repo-sync/settings.json with a "repos" list.`,
+        `Settings file not found: ${deps.settingsPath}. Create ~/.tfscripts/repos/settings.json with a "repos" list.`,
       );
     }
     throw error;
