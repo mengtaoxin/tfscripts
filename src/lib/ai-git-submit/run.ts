@@ -12,6 +12,7 @@ import {
   type GitDeps,
 } from './git.js';
 import { generateCommitMessage, type GenerateCommitMessageDeps } from './llm.js';
+import { isNetworkError } from './network-error.js';
 import { withExponentialBackoff } from './retry.js';
 
 export interface SubmitOptions {
@@ -105,6 +106,7 @@ export async function runSubmit(
       maxRetries: config.maxRetries,
       baseMs: config.retryBaseMs,
       sleep: deps.sleep,
+      shouldRetry: isNetworkError,
       onRetry: ({ attempt, delayMs }) => {
         log(`LLM request failed (attempt ${attempt + 1}); retrying in ${delayMs}ms...`);
       },
@@ -134,6 +136,7 @@ export async function runSubmit(
         maxRetries: config.maxRetries,
         baseMs: config.retryBaseMs,
         sleep: deps.sleep,
+        shouldRetry: isNetworkError,
         onRetry: ({ attempt, delayMs }) => {
           log(`git push failed (attempt ${attempt + 1}); retrying in ${delayMs}ms...`);
         },

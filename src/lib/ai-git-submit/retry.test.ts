@@ -66,4 +66,39 @@ describe('withExponentialBackoff', () => {
 
     expect(sleep).toHaveBeenCalledWith(150);
   });
+
+  it('does not retry when shouldRetry returns false', async () => {
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const fn = vi.fn().mockRejectedValue(new Error('rejected by remote'));
+
+    await expect(
+      withExponentialBackoff(fn, {
+        maxRetries: 3,
+        baseMs: 50,
+        sleep,
+        random: () => 0,
+        shouldRetry: () => false,
+      }),
+    ).rejects.toThrow('rejected by remote');
+
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+  });
+
+  it('retries only when shouldRetry returns true', async () => {
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const fn = vi.fn().mockRejectedValueOnce(new Error('network blip')).mockResolvedValueOnce('ok');
+
+    const result = await withExponentialBackoff(fn, {
+      maxRetries: 3,
+      baseMs: 50,
+      sleep,
+      random: () => 0,
+      shouldRetry: (error) => error instanceof Error && error.message.includes('network'),
+    });
+
+    expect(result).toBe('ok');
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledTimes(1);
+  });
 });

@@ -89,7 +89,7 @@ describe('runSubmit', () => {
     expect(git.execFile).not.toHaveBeenCalledWith('git', ['push'], expect.any(Object));
   });
 
-  it('retries push with exponential backoff then succeeds', async () => {
+  it('retries push on network errors with exponential backoff then succeeds', async () => {
     const git = createGitMock();
     let pushCalls = 0;
     git.execFile = vi.fn(async (_file: string, args: readonly string[]) => {
@@ -109,7 +109,7 @@ describe('runSubmit', () => {
       if (joined === 'push') {
         pushCalls += 1;
         if (pushCalls < 2) {
-          throw new Error('network');
+          throw Object.assign(new Error('Could not resolve host'), { code: 'ENOTFOUND' });
         }
         return { stdout: '', stderr: '' };
       }
@@ -137,11 +137,56 @@ describe('runSubmit', () => {
     expect(log).toHaveBeenCalledWith(expect.stringContaining('git push failed'));
   });
 
-  it('retries LLM generation on failure', async () => {
+  it('does not retry git push on remote reject', async () => {
+    const git = createGitMock();
+    let pushCalls = 0;
+    git.execFile = vi.fn(async (_file: string, args: readonly string[]) => {
+      const joined = args.join(' ');
+      if (joined === 'rev-parse --show-toplevel') {
+        return { stdout: '/repo\n', stderr: '' };
+      }
+      if (joined === 'rev-parse --abbrev-ref HEAD') {
+        return { stdout: 'main\n', stderr: '' };
+      }
+      if (joined === 'diff --cached') {
+        return { stdout: 'diff --git a/a.ts\n+line\n', stderr: '' };
+      }
+      if (joined === 'diff --cached --stat') {
+        return { stdout: ' a.ts | 1 +\n', stderr: '' };
+      }
+      if (joined === 'push') {
+        pushCalls += 1;
+        throw new Error('[rejected] main -> main (non-fast-forward)');
+      }
+      return { stdout: '', stderr: '' };
+    });
+
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const error = vi.fn();
+
+    const result = await runSubmit(
+      { add: false, push: true },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: vi.fn().mockResolvedValue('fix: bug'),
+        log: vi.fn(),
+        error,
+        sleep,
+      },
+    );
+
+    expect(result.exitCode).toBe(1);
+    expect(pushCalls).toBe(1);
+    expect(sleep).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('non-fast-forward'));
+  });
+
+  it('retries LLM generation on network failure', async () => {
     const git = createGitMock();
     const generate = vi
       .fn()
-      .mockRejectedValueOnce(new Error('timeout'))
+      .mockRejectedValueOnce(Object.assign(new TypeError('fetch failed'), { code: 'ECONNRESET' }))
       .mockResolvedValueOnce('chore: retry worked');
     const sleep = vi.fn().mockResolvedValue(undefined);
 
@@ -160,5 +205,31 @@ describe('runSubmit', () => {
     expect(result.exitCode).toBe(0);
     expect(generate).toHaveBeenCalledTimes(2);
     expect(sleep).toHaveBeenCalled();
+  });
+
+  it('does not retry LLM generation on non-network API errors', async () => {
+    const git = createGitMock();
+    const generate = vi
+      .fn()
+      .mockRejectedValue(new Error('LLM request failed with status 402: insufficient balance'));
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    const error = vi.fn();
+
+    const result = await runSubmit(
+      { add: false, push: false },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: generate,
+        log: vi.fn(),
+        error,
+        sleep,
+      },
+    );
+
+    expect(result.exitCode).toBe(1);
+    expect(generate).toHaveBeenCalledTimes(1);
+    expect(sleep).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('status 402'));
   });
 });

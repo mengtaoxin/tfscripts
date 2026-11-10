@@ -3,6 +3,8 @@ export interface RetryOptions {
   baseMs: number;
   sleep?: (ms: number) => Promise<void>;
   random?: () => number;
+  /** When set, only errors for which this returns true are retried. */
+  shouldRetry?: (error: unknown) => boolean;
   onRetry?: (info: { attempt: number; error: unknown; delayMs: number }) => void;
 }
 
@@ -19,6 +21,7 @@ function computeDelayMs(baseMs: number, attempt: number, random: () => number): 
 /**
  * Run `fn`, retrying on failure up to `maxRetries` times after the first try.
  * Delay between attempts: `baseMs * 2^attempt + jitter` (attempt starts at 0 after first failure).
+ * When `shouldRetry` is set, non-matching errors fail immediately without further attempts.
  */
 export async function withExponentialBackoff<T>(
   fn: () => Promise<T>,
@@ -31,7 +34,7 @@ export async function withExponentialBackoff<T>(
     try {
       return await fn();
     } catch (error) {
-      if (attempt >= options.maxRetries) {
+      if (attempt >= options.maxRetries || options.shouldRetry?.(error) === false) {
         throw error;
       }
       const delayMs = computeDelayMs(options.baseMs, attempt, random);
