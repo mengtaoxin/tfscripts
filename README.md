@@ -7,7 +7,7 @@ Useful TypeScript CLI scripts for macOS.
 | Script           | Description                                                                  |
 | ---------------- | ---------------------------------------------------------------------------- |
 | `hello`          | Simple greeting CLI (example / smoke test)                                   |
-| `keep-awake`     | Keep the Mac awake for a set duration (optionally keep the display on)       |
+| `keep-awake`     | Keep awake for a set duration (optionally keep the display on)               |
 | `ai-git-submit`  | Generate a Conventional Commits message via LLM, commit, optionally add/push |
 | `repos`          | Multi-repo helper: `update` / `check` / `list` (REPO + PATH table)           |
 | `retry`          | Re-run a shell command until it exits 0, waiting a fixed interval            |
@@ -15,7 +15,7 @@ Useful TypeScript CLI scripts for macOS.
 
 ## Requirements
 
-- macOS
+- macOS (primary). Per-script Linux / Windows notes: [docs/compatibility.md](docs/compatibility.md)
 - Node.js 22+
 
 ## Setup

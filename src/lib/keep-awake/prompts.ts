@@ -19,7 +19,7 @@ export async function promptKeepAwakeOptions(
   deps: PromptKeepAwakeOptionsDeps = defaultDeps,
 ): Promise<PromptedKeepAwakeOptions> {
   const hours = await deps.askHours({
-    message: 'How many hours should the Mac stay awake?',
+    message: 'How many hours to stay awake?',
     default: 4,
     min: 1,
     max: 24,

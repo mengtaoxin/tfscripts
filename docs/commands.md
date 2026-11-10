@@ -49,4 +49,4 @@ These files live outside the repo, or are gitignored. The shape is in source; do
 | `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`)                   |
 | `keep-awake`     | `~/.tfscripts/keep-awake/keep-awake.json` session state (`src/lib/keep-awake/state.ts`)            |
 
-`keep-awake` and `open-in-vscode` call macOS tools. Unit tests inject those collaborators, so `npm test` does not need macOS.
+`keep-awake` uses `caffeinate`; `open-in-vscode` needs the `code` CLI. Platform notes: [compatibility.md](compatibility.md). Unit tests inject those collaborators, so `npm test` does not need the host binaries.

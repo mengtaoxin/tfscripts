@@ -1,4 +1,4 @@
-export const HELP_TEXT = `keep-awake — keep this Mac awake for a while
+export const HELP_TEXT = `keep-awake — keep awake for a while
 
 Usage:
   keep-awake [--hours <1-24> --screen <yes|no>]
@@ -7,7 +7,7 @@ Usage:
   keep-awake help
 
 Commands:
-  (default) Start keeping the Mac awake (replaces any existing session)
+  (default) Start keeping awake (replaces any existing session)
   status    Show whether a managed keep-awake session is active
   stop      Stop the managed keep-awake session and restore defaults
   help      Show this help

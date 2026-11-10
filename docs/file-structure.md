@@ -10,7 +10,7 @@ Read this when adding or moving files. Where tests go: [testing.md](testing.md).
 | `src/**/*.test.ts`         | Colocated unit tests                                                               |
 | `scripts/generate-bin.mjs` | Writes `bin/<name>` from each top-level `dist/<name>.js`                           |
 | `.agents/skills/`          | Installed agent skills (`skills-lock.json`)                                        |
-| `docs/`                    | Workflow. Order for code changes: [change-code-steps.md](change-code-steps.md)     |
+| `docs/`                    | Workflow docs; OS matrix in [compatibility.md](compatibility.md)                   |
 
 ## Adding a command
 
