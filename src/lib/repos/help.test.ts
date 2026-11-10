@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HELP_TEXT } from './help.js';
+import { HELP_CHECK, HELP_LIST, HELP_TEXT, HELP_UPDATE, helpTextFor } from './help.js';
 
 describe('HELP_TEXT', () => {
   it('mentions the command name, config path, and subcommands', () => {
@@ -9,5 +9,17 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('repos update');
     expect(HELP_TEXT).toContain('repos check');
     expect(HELP_TEXT).toContain('repos list');
+    expect(HELP_TEXT).toContain('repos help update');
+  });
+});
+
+describe('helpTextFor', () => {
+  it('returns leaf help for each subcommand', () => {
+    expect(helpTextFor('update')).toBe(HELP_UPDATE);
+    expect(helpTextFor('check')).toBe(HELP_CHECK);
+    expect(helpTextFor('list')).toBe(HELP_LIST);
+    expect(HELP_UPDATE).toContain('repos update');
+    expect(HELP_CHECK).toContain('repos check');
+    expect(HELP_LIST).toContain('repos list');
   });
 });

@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { parseArgs } from './parse-args.js';
 
 describe('parseArgs', () => {
-  it('uses interactive mode when no arguments are provided', () => {
+  it('parses bare argv with no flags set', () => {
     expect(parseArgs([])).toEqual({
       ok: true,
       command: 'submit',
-      mode: 'interactive',
+      noInput: false,
+      add: undefined,
+      push: undefined,
     });
   });
 
@@ -24,36 +26,33 @@ describe('parseArgs', () => {
     });
   });
 
-  it('parses direct mode with both flags', () => {
+  it('parses flags including partial sets and --no-input', () => {
     expect(parseArgs(['--add', 'yes', '--push', 'no'])).toEqual({
       ok: true,
       command: 'submit',
-      mode: 'direct',
+      noInput: false,
       add: true,
       push: false,
     });
     expect(parseArgs(['--push', 'YES', '--add', 'NO'])).toEqual({
       ok: true,
       command: 'submit',
-      mode: 'direct',
+      noInput: false,
       add: false,
       push: true,
     });
-  });
-
-  it('applies defaults for omitted flags in direct mode', () => {
     expect(parseArgs(['--add', 'yes'])).toEqual({
       ok: true,
       command: 'submit',
-      mode: 'direct',
+      noInput: false,
       add: true,
-      push: false,
+      push: undefined,
     });
-    expect(parseArgs(['--push', 'yes'])).toEqual({
+    expect(parseArgs(['--push', 'yes', '--no-input'])).toEqual({
       ok: true,
       command: 'submit',
-      mode: 'direct',
-      add: false,
+      noInput: true,
+      add: undefined,
       push: true,
     });
   });

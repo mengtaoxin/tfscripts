@@ -1,3 +1,4 @@
+import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
 import { HELP_TEXT } from './lib/open-in-vscode/help.js';
 import { parseArgs } from './lib/open-in-vscode/parse-args.js';
 import { runOpen } from './lib/open-in-vscode/run.js';
@@ -11,7 +12,7 @@ async function main(argv: readonly string[]): Promise<number> {
       console.error('');
       console.error(HELP_TEXT.trimEnd());
     }
-    return 1;
+    return exitCodeForParseFailure(parsed.reason);
   }
 
   if (parsed.command === 'help') {

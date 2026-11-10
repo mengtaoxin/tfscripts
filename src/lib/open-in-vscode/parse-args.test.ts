@@ -2,18 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { parseArgs } from './parse-args.js';
 
 describe('parseArgs', () => {
-  it('parses help via help, -h, and --help', () => {
+  it('parses help via bare argv, help, -h, and --help', () => {
+    expect(parseArgs([])).toEqual({ ok: true, command: 'help' });
     expect(parseArgs(['help'])).toEqual({ ok: true, command: 'help' });
     expect(parseArgs(['-h'])).toEqual({ ok: true, command: 'help' });
     expect(parseArgs(['--help'])).toEqual({ ok: true, command: 'help' });
   });
 
-  it('requires --path', () => {
-    expect(parseArgs([])).toEqual({
-      ok: false,
-      reason: 'usage',
-      message: 'Missing --path. Run "open-in-vscode help" for usage.',
-    });
+  it('requires --path when other flags are present', () => {
     expect(parseArgs(['--reuse-window', 'yes'])).toEqual({
       ok: false,
       reason: 'usage',

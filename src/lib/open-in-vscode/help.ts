@@ -4,8 +4,10 @@ Usage:
   open-in-vscode --path <path|alias> [--reuse-window <yes|no>]
   open-in-vscode help
 
+With no arguments, open-in-vscode prints this help.
+
 Options:
-  --path <value>              Folder path or configured alias (required)
+  --path <value>              Folder path or configured alias (required to open)
   --reuse-window <yes|no>     Reuse an existing VS Code window if possible
                               (default: yes). Use "no" to force a new window.
 

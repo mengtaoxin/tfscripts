@@ -1,3 +1,6 @@
+import { isHelpToken } from '../cli/help-args.js';
+import { parseYesNo } from '../cli/yes-no.js';
+
 export type ParseSuccess =
   | { ok: true; command: 'help' }
   | { ok: true; command: 'open'; path: string; reuseWindow: boolean };
@@ -9,17 +12,6 @@ export type ParseFailure = {
 };
 
 export type ParseResult = ParseSuccess | ParseFailure;
-
-function parseYesNo(raw: string): boolean | null {
-  const normalized = raw.toLowerCase();
-  if (normalized === 'yes') {
-    return true;
-  }
-  if (normalized === 'no') {
-    return false;
-  }
-  return null;
-}
 
 function readFlagValue(
   args: readonly string[],
@@ -55,9 +47,13 @@ function hasUnknownFlags(args: readonly string[]): string | undefined {
 }
 
 export function parseArgs(argv: readonly string[]): ParseResult {
+  if (argv.length === 0) {
+    return { ok: true, command: 'help' };
+  }
+
   const [first] = argv;
 
-  if (first === 'help' || first === '-h' || first === '--help') {
+  if (isHelpToken(first)) {
     return { ok: true, command: 'help' };
   }
 

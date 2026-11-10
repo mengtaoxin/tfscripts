@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { promptSubmitOptions } from './prompts.js';
+import { applySubmitDefaults, formatSubmitInvocation, promptSubmitOptions } from './prompts.js';
 
 describe('promptSubmitOptions', () => {
-  it('asks for add and push with No as default', async () => {
+  it('asks add then push with No as the default for both', async () => {
     const askAdd = vi.fn().mockResolvedValue(false);
-    const askPush = vi.fn().mockResolvedValue(true);
+    const askPush = vi.fn().mockResolvedValue(false);
 
-    const result = await promptSubmitOptions({ askAdd, askPush });
+    const result = await promptSubmitOptions({}, { askAdd, askPush });
 
     expect(askAdd).toHaveBeenCalledWith({
       message: 'Run "git add ." before generating the commit message?',
@@ -24,6 +24,32 @@ describe('promptSubmitOptions', () => {
       ],
       default: false,
     });
-    expect(result).toEqual({ add: false, push: true });
+    expect(result).toEqual({ add: false, push: false });
+  });
+
+  it('skips prompts for values already supplied by flags', async () => {
+    const askAdd = vi.fn();
+    const askPush = vi.fn().mockResolvedValue(true);
+
+    const result = await promptSubmitOptions({ add: true }, { askAdd, askPush });
+
+    expect(askAdd).not.toHaveBeenCalled();
+    expect(askPush).toHaveBeenCalledOnce();
+    expect(result).toEqual({ add: true, push: true });
+  });
+});
+
+describe('applySubmitDefaults', () => {
+  it('fills omitted flags with no/no', () => {
+    expect(applySubmitDefaults({})).toEqual({ add: false, push: false });
+    expect(applySubmitDefaults({ add: true })).toEqual({ add: true, push: false });
+  });
+});
+
+describe('formatSubmitInvocation', () => {
+  it('prints a non-interactive equivalent command line', () => {
+    expect(formatSubmitInvocation({ add: true, push: false })).toBe(
+      'ai-git-submit --add yes --push no',
+    );
   });
 });

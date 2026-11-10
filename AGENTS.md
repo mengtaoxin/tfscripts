@@ -11,6 +11,7 @@ Useful TypeScript CLI scripts for macOS. Each command is a top-level `src/<name>
 ## Read when
 
 - Running scripts or verify → [docs/commands.md](docs/commands.md)
+- CLI help / bare invocation / prompts → [docs/cli-rules.md](docs/cli-rules.md)
 - macOS / Linux / Windows support → [docs/compatibility.md](docs/compatibility.md)
 - Running or writing tests → [docs/testing.md](docs/testing.md)
 - Adding or moving files → [docs/file-structure.md](docs/file-structure.md)

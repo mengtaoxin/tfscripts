@@ -1,3 +1,5 @@
+import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { canPrompt } from './lib/cli/interactive.js';
 import {
   clearKeepAwakeState,
   defaultStatePath,
@@ -11,11 +13,15 @@ import {
   stopKeepAwakeSession,
 } from './lib/keep-awake/session.js';
 import { parseArgs } from './lib/keep-awake/parse-args.js';
-import { promptKeepAwakeOptions } from './lib/keep-awake/prompts.js';
+import {
+  applyKeepAwakeDefaults,
+  formatKeepAwakeInvocation,
+  promptKeepAwakeOptions,
+} from './lib/keep-awake/prompts.js';
 import {
   formatLocalDateTime,
   formatStatusActive,
-  HELP_TEXT,
+  helpTextFor,
   STATUS_DEFAULT,
 } from './lib/keep-awake/help.js';
 
@@ -26,15 +32,15 @@ async function main(argv: readonly string[]): Promise<number> {
     console.error(parsed.message);
     if (parsed.reason === 'usage') {
       console.error('');
-      console.error(HELP_TEXT.trimEnd());
+      console.error(helpTextFor(undefined).trimEnd());
     }
-    return 1;
+    return exitCodeForParseFailure(parsed.reason);
   }
 
   const statePath = defaultStatePath();
 
   if (parsed.command === 'help') {
-    console.log(HELP_TEXT.trimEnd());
+    console.log(helpTextFor(parsed.topic).trimEnd());
     return 0;
   }
 
@@ -64,11 +70,33 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  // Default action: start a session (status/stop/help returned above).
-  const options =
-    parsed.command === 'start' && parsed.mode === 'direct'
-      ? { hours: parsed.hours, screen: parsed.screen }
-      : await promptKeepAwakeOptions();
+  if (parsed.command !== 'start') {
+    return EXIT_USAGE;
+  }
+
+  const presets = { hours: parsed.hours, screen: parsed.screen };
+  const needsPrompt = presets.hours === undefined || presets.screen === undefined;
+
+  let options;
+  let prompted = false;
+  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
+    options = await promptKeepAwakeOptions(presets);
+    prompted = true;
+  } else {
+    const resolved = applyKeepAwakeDefaults(presets);
+    if ('missing' in resolved) {
+      console.error(
+        `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
+      );
+      console.error('Run "keep-awake help" for usage.');
+      return EXIT_USAGE;
+    }
+    options = resolved;
+  }
+
+  if (prompted) {
+    console.error(`Run this again without prompts:\n  ${formatKeepAwakeInvocation(options)}`);
+  }
 
   const result = startKeepAwakeSession({
     hours: options.hours,

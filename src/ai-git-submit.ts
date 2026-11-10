@@ -1,5 +1,11 @@
+import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { canPrompt } from './lib/cli/interactive.js';
 import { parseArgs } from './lib/ai-git-submit/parse-args.js';
-import { promptSubmitOptions } from './lib/ai-git-submit/prompts.js';
+import {
+  applySubmitDefaults,
+  formatSubmitInvocation,
+  promptSubmitOptions,
+} from './lib/ai-git-submit/prompts.js';
 import { HELP_TEXT } from './lib/ai-git-submit/help.js';
 import { runSubmit } from './lib/ai-git-submit/run.js';
 
@@ -12,7 +18,7 @@ async function main(argv: readonly string[]): Promise<number> {
       console.error('');
       console.error(HELP_TEXT.trimEnd());
     }
-    return 1;
+    return exitCodeForParseFailure(parsed.reason);
   }
 
   if (parsed.command === 'help') {
@@ -20,8 +26,21 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  const options =
-    parsed.mode === 'direct' ? { add: parsed.add, push: parsed.push } : await promptSubmitOptions();
+  const presets = { add: parsed.add, push: parsed.push };
+  const needsPrompt = presets.add === undefined || presets.push === undefined;
+
+  let options;
+  let prompted = false;
+  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
+    options = await promptSubmitOptions(presets);
+    prompted = true;
+  } else {
+    options = applySubmitDefaults(presets);
+  }
+
+  if (prompted) {
+    console.error(`Run this again without prompts:\n  ${formatSubmitInvocation(options)}`);
+  }
 
   const result = await runSubmit(options);
   return result.exitCode;

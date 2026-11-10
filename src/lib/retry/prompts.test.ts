@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { promptRetryOptions } from './prompts.js';
+import { applyRetryDefaults, formatRetryInvocation, promptRetryOptions } from './prompts.js';
 
 describe('promptRetryOptions', () => {
   it('asks for the command, attempt count, and interval with defaults', async () => {
@@ -7,7 +7,7 @@ describe('promptRetryOptions', () => {
     const askTimes = vi.fn().mockResolvedValue(10);
     const askInterval = vi.fn().mockResolvedValue(4);
 
-    const result = await promptRetryOptions({ askCommand, askTimes, askInterval });
+    const result = await promptRetryOptions({}, { askCommand, askTimes, askInterval });
 
     expect(askCommand).toHaveBeenCalledWith({
       message: 'Command to run:',
@@ -33,12 +33,28 @@ describe('promptRetryOptions', () => {
     expect(result).toEqual({ command: 'echo ok', times: 10, intervalSeconds: 4 });
   });
 
+  it('skips prompts for values already supplied by flags', async () => {
+    const askCommand = vi.fn();
+    const askTimes = vi.fn();
+    const askInterval = vi.fn().mockResolvedValue(2);
+
+    const result = await promptRetryOptions(
+      { command: 'echo ok', times: 3 },
+      { askCommand, askTimes, askInterval },
+    );
+
+    expect(askCommand).not.toHaveBeenCalled();
+    expect(askTimes).not.toHaveBeenCalled();
+    expect(askInterval).toHaveBeenCalledOnce();
+    expect(result).toEqual({ command: 'echo ok', times: 3, intervalSeconds: 2 });
+  });
+
   it('rejects a blank command and non-integer counts or intervals', async () => {
     const askCommand = vi.fn().mockResolvedValue('echo ok');
     const askTimes = vi.fn().mockResolvedValue(10);
     const askInterval = vi.fn().mockResolvedValue(10);
 
-    await promptRetryOptions({ askCommand, askTimes, askInterval });
+    await promptRetryOptions({}, { askCommand, askTimes, askInterval });
 
     const commandValidate = askCommand.mock.calls[0]?.[0].validate as (
       value: string,
@@ -64,11 +80,30 @@ describe('promptRetryOptions', () => {
 
   it('rejects a whitespace-only command returned by the prompt', async () => {
     const askCommand = vi.fn().mockResolvedValue('   ');
-    const askTimes = vi.fn().mockResolvedValue(10);
-    const askInterval = vi.fn().mockResolvedValue(10);
+    const askTimes = vi.fn();
+    const askInterval = vi.fn();
 
-    await expect(promptRetryOptions({ askCommand, askTimes, askInterval })).rejects.toThrow(
+    await expect(promptRetryOptions({}, { askCommand, askTimes, askInterval })).rejects.toThrow(
       'Command is required.',
+    );
+  });
+});
+
+describe('applyRetryDefaults', () => {
+  it('requires --command and fills times/interval defaults', () => {
+    expect(applyRetryDefaults({})).toEqual({ missing: ['--command'] });
+    expect(applyRetryDefaults({ command: 'echo ok' })).toEqual({
+      command: 'echo ok',
+      times: 10,
+      intervalSeconds: 10,
+    });
+  });
+});
+
+describe('formatRetryInvocation', () => {
+  it('prints a non-interactive equivalent command line', () => {
+    expect(formatRetryInvocation({ command: 'echo ok', times: 3, intervalSeconds: 1 })).toBe(
+      'retry --command "echo ok" --times 3 --interval 1',
     );
   });
 });

@@ -1,6 +1,12 @@
+import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { canPrompt } from './lib/cli/interactive.js';
 import { HELP_TEXT } from './lib/retry/help.js';
 import { parseArgs } from './lib/retry/parse-args.js';
-import { promptRetryOptions } from './lib/retry/prompts.js';
+import {
+  applyRetryDefaults,
+  formatRetryInvocation,
+  promptRetryOptions,
+} from './lib/retry/prompts.js';
 import { formatRetryNotice, runRetry, runShellCommand } from './lib/retry/run.js';
 
 async function sleep(ms: number): Promise<void> {
@@ -18,7 +24,7 @@ async function main(argv: readonly string[]): Promise<number> {
       console.error('');
       console.error(HELP_TEXT.trimEnd());
     }
-    return 1;
+    return exitCodeForParseFailure(parsed.reason);
   }
 
   if (parsed.command === 'help') {
@@ -26,7 +32,37 @@ async function main(argv: readonly string[]): Promise<number> {
     return 0;
   }
 
-  const options = await promptRetryOptions();
+  const presets = {
+    command: parsed.shellCommand,
+    times: parsed.times,
+    intervalSeconds: parsed.intervalSeconds,
+  };
+  const needsPrompt =
+    presets.command === undefined ||
+    presets.times === undefined ||
+    presets.intervalSeconds === undefined;
+
+  let options;
+  let prompted = false;
+  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
+    options = await promptRetryOptions(presets);
+    prompted = true;
+  } else {
+    const resolved = applyRetryDefaults(presets);
+    if ('missing' in resolved) {
+      console.error(
+        `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
+      );
+      console.error('Run "retry help" for usage.');
+      return EXIT_USAGE;
+    }
+    options = resolved;
+  }
+
+  if (prompted) {
+    console.error(`Run this again without prompts:\n  ${formatRetryInvocation(options)}`);
+  }
+
   return runRetry({
     command: options.command,
     times: options.times,

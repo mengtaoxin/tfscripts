@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { parseArgs } from './parse-args.js';
 
 describe('parseArgs', () => {
-  it('shows help when no arguments are provided', () => {
+  it('shows root help when no arguments are provided', () => {
     expect(parseArgs([])).toEqual({ ok: true, command: 'help' });
   });
 
-  it('parses help flags', () => {
+  it('parses root help flags', () => {
     expect(parseArgs(['help'])).toEqual({ ok: true, command: 'help' });
     expect(parseArgs(['-h'])).toEqual({ ok: true, command: 'help' });
     expect(parseArgs(['--help'])).toEqual({ ok: true, command: 'help' });
@@ -16,6 +16,24 @@ describe('parseArgs', () => {
     expect(parseArgs(['update'])).toEqual({ ok: true, command: 'update' });
     expect(parseArgs(['check'])).toEqual({ ok: true, command: 'check' });
     expect(parseArgs(['list'])).toEqual({ ok: true, command: 'list' });
+  });
+
+  it('parses leaf help via help <sub> and <sub> --help', () => {
+    expect(parseArgs(['help', 'update'])).toEqual({
+      ok: true,
+      command: 'help',
+      topic: 'update',
+    });
+    expect(parseArgs(['check', '-h'])).toEqual({
+      ok: true,
+      command: 'help',
+      topic: 'check',
+    });
+    expect(parseArgs(['list', '--help'])).toEqual({
+      ok: true,
+      command: 'help',
+      topic: 'list',
+    });
   });
 
   it('rejects unknown commands', () => {

@@ -1,7 +1,15 @@
+import { isHelpToken } from '../cli/help-args.js';
+import { parseYesNo } from '../cli/yes-no.js';
+
 export type ParseSuccess =
   | { ok: true; command: 'help' }
-  | { ok: true; command: 'submit'; mode: 'interactive' }
-  | { ok: true; command: 'submit'; mode: 'direct'; add: boolean; push: boolean };
+  | {
+      ok: true;
+      command: 'submit';
+      noInput: boolean;
+      add: boolean | undefined;
+      push: boolean | undefined;
+    };
 
 export type ParseFailure = {
   ok: false;
@@ -10,17 +18,6 @@ export type ParseFailure = {
 };
 
 export type ParseResult = ParseSuccess | ParseFailure;
-
-function parseYesNo(raw: string): boolean | null {
-  const normalized = raw.toLowerCase();
-  if (normalized === 'yes') {
-    return true;
-  }
-  if (normalized === 'no') {
-    return false;
-  }
-  return null;
-}
 
 function readFlagValue(
   args: readonly string[],
@@ -38,7 +35,7 @@ function readFlagValue(
 }
 
 function hasUnknownFlags(args: readonly string[]): string | undefined {
-  const known = new Set(['--add', '--push']);
+  const known = new Set(['--add', '--push', '--no-input']);
   for (let i = 0; i < args.length; i++) {
     const token = args[i];
     if (token === undefined || !token.startsWith('-')) {
@@ -46,6 +43,9 @@ function hasUnknownFlags(args: readonly string[]): string | undefined {
     }
     if (!known.has(token)) {
       return token;
+    }
+    if (token === '--no-input') {
+      continue;
     }
     const next = args[i + 1];
     if (next !== undefined && !next.startsWith('-')) {
@@ -55,14 +55,38 @@ function hasUnknownFlags(args: readonly string[]): string | undefined {
   return undefined;
 }
 
+function parseYesNoFlag(
+  argv: readonly string[],
+  name: '--add' | '--push',
+): { ok: true; value: boolean | undefined } | { ok: false; message: string } {
+  const flag = readFlagValue(argv, name);
+  if (!flag.present) {
+    return { ok: true, value: undefined };
+  }
+  if (flag.value === undefined) {
+    return { ok: false, message: `${name} must be "yes" or "no".` };
+  }
+  const parsed = parseYesNo(flag.value);
+  if (parsed === null) {
+    return { ok: false, message: `${name} must be "yes" or "no".` };
+  }
+  return { ok: true, value: parsed };
+}
+
 export function parseArgs(argv: readonly string[]): ParseResult {
   if (argv.length === 0) {
-    return { ok: true, command: 'submit', mode: 'interactive' };
+    return {
+      ok: true,
+      command: 'submit',
+      noInput: false,
+      add: undefined,
+      push: undefined,
+    };
   }
 
   const [first] = argv;
 
-  if (first === 'help' || first === '-h' || first === '--help') {
+  if (isHelpToken(first)) {
     return { ok: true, command: 'help' };
   }
 
@@ -83,49 +107,20 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     };
   }
 
-  const addFlag = readFlagValue(argv, '--add');
-  const pushFlag = readFlagValue(argv, '--push');
-
-  let add = false;
-  let push = false;
-
-  if (addFlag.present) {
-    if (addFlag.value === undefined) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--add must be "yes" or "no".',
-      };
-    }
-    const parsed = parseYesNo(addFlag.value);
-    if (parsed === null) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--add must be "yes" or "no".',
-      };
-    }
-    add = parsed;
+  const add = parseYesNoFlag(argv, '--add');
+  if (!add.ok) {
+    return { ok: false, reason: 'invalid', message: add.message };
+  }
+  const push = parseYesNoFlag(argv, '--push');
+  if (!push.ok) {
+    return { ok: false, reason: 'invalid', message: push.message };
   }
 
-  if (pushFlag.present) {
-    if (pushFlag.value === undefined) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--push must be "yes" or "no".',
-      };
-    }
-    const parsed = parseYesNo(pushFlag.value);
-    if (parsed === null) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--push must be "yes" or "no".',
-      };
-    }
-    push = parsed;
-  }
-
-  return { ok: true, command: 'submit', mode: 'direct', add, push };
+  return {
+    ok: true,
+    command: 'submit',
+    noInput: argv.includes('--no-input'),
+    add: add.value,
+    push: push.value,
+  };
 }

@@ -24,4 +24,4 @@ Run `npm run format` when the tree needs formatting, then `npm run verify` once 
 
 ## 4. Docs
 
-Update the page that owns the changed contract ([commands.md](commands.md), [testing.md](testing.md), [file-structure.md](file-structure.md), [compatibility.md](compatibility.md), or [README.md](../README.md)). Do not add lists that only mirror code; point to the source instead.
+Update the page that owns the changed contract ([commands.md](commands.md), [cli-rules.md](cli-rules.md), [testing.md](testing.md), [file-structure.md](file-structure.md), [compatibility.md](compatibility.md), or [README.md](../README.md)). Do not add lists that only mirror code; point to the source instead.
