@@ -34,6 +34,8 @@ Add the `bin` directory to your `PATH`, or run scripts via:
 
 ## Development
 
+Code changes follow [docs/change-code-steps.md](docs/change-code-steps.md) ([AGENTS.md](AGENTS.md)).
+
 ```bash
 npm run verify
 ```
