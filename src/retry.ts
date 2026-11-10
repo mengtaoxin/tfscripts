@@ -1,5 +1,6 @@
 import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
-import { canPrompt } from './lib/cli/interactive.js';
+import { resolveInteractiveOptions } from './lib/cli/resolve-options.js';
+import { runCliMain } from './lib/cli/run-main.js';
 import { HELP_TEXT } from './lib/retry/help.js';
 import { parseArgs } from './lib/retry/parse-args.js';
 import {
@@ -37,32 +38,26 @@ async function main(argv: readonly string[]): Promise<number> {
     times: parsed.times,
     intervalSeconds: parsed.intervalSeconds,
   };
-  const needsPrompt =
-    presets.command === undefined ||
-    presets.times === undefined ||
-    presets.intervalSeconds === undefined;
+  const resolved = await resolveInteractiveOptions({
+    noInput: parsed.noInput,
+    needsPrompt:
+      presets.command === undefined ||
+      presets.times === undefined ||
+      presets.intervalSeconds === undefined,
+    prompt: () => promptRetryOptions(presets),
+    applyDefaults: () => applyRetryDefaults(presets),
+    formatInvocation: formatRetryInvocation,
+  });
 
-  let options;
-  let prompted = false;
-  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
-    options = await promptRetryOptions(presets);
-    prompted = true;
-  } else {
-    const resolved = applyRetryDefaults(presets);
-    if ('missing' in resolved) {
-      console.error(
-        `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
-      );
-      console.error('Run "retry help" for usage.');
-      return EXIT_USAGE;
-    }
-    options = resolved;
+  if (!resolved.ok) {
+    console.error(
+      `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
+    );
+    console.error('Run "retry help" for usage.');
+    return EXIT_USAGE;
   }
 
-  if (prompted) {
-    console.error(`Run this again without prompts:\n  ${formatRetryInvocation(options)}`);
-  }
-
+  const options = resolved.options;
   return runRetry({
     command: options.command,
     times: options.times,
@@ -75,13 +70,4 @@ async function main(argv: readonly string[]): Promise<number> {
   });
 }
 
-try {
-  const exitCode = await main(process.argv.slice(2));
-  process.exit(exitCode);
-} catch (error) {
-  if (error instanceof Error && error.name === 'ExitPromptError') {
-    console.error('Cancelled.');
-    process.exit(1);
-  }
-  throw error;
-}
+await runCliMain(() => main(process.argv.slice(2)));

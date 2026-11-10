@@ -6,7 +6,9 @@ Read this when adding or moving files. Where tests go: [testing.md](testing.md).
 | -------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `src/<name>.ts`            | CLI entry. Parse argv, call lib, exit. One file per command                                              |
 | `src/lib/<name>/`          | Modules for that command (`parse-args`, `help`, `prompts`, `run`, smaller helpers)                       |
-| `src/lib/cli/`             | Shared CLI helpers (exit codes, help tokens, TTY / `--no-input`, yes/no)                                 |
+| `src/lib/cli/`             | Shared CLI helpers (exit codes, help tokens, flags, interactive resolve, `runCliMain`, TTY / yes-no)     |
+| `src/lib/retry-policy/`    | Shared exponential backoff and network-error classification (not the `retry` CLI)                        |
+| `src/lib/git/`             | Shared git process exec, branch helpers, conflict errors                                                 |
 | `src/lib/greet.ts`         | Helper for `src/hello.ts`. `hello` has no `src/lib/hello/` directory                                     |
 | `src/**/*.test.ts`         | Colocated unit tests                                                                                     |
 | `scripts/generate-bin.mjs` | Writes `bin/<name>` from each top-level `dist/<name>.js`                                                 |

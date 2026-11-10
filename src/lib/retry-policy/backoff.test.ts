@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { withExponentialBackoff } from './retry.js';
+import { withExponentialBackoff } from './backoff.js';
 
 describe('withExponentialBackoff', () => {
   it('returns on first success without sleeping', async () => {

@@ -104,7 +104,9 @@ Do not mix both rules across commands without calling out the difference in each
 
 ## Implementation sketch
 
-Keep the entry thin (`parseArgs` → dispatch → exit). Put help strings in `src/lib/<name>/help.ts` (or equivalent). Put prompts in `src/lib/<name>/prompts.ts` and keep them injectable for tests ([testing.md](testing.md)).
+Keep the entry thin (`parseArgs` → dispatch → exit). Prefer `runCliMain` from `src/lib/cli/run-main.ts` so inquirer cancel maps to exit `1`. Put help strings in `src/lib/<name>/help.ts` (or equivalent). Put prompts in `src/lib/<name>/prompts.ts` and keep them injectable for tests ([testing.md](testing.md)).
+
+Reuse `src/lib/cli/flags.ts` for `readFlagValue` / `hasUnknownFlags` / `parsePositiveInt` / `parseYesNoFlag`, and `resolveInteractiveOptions` for the hybrid partial-flags → prompt-or-defaults loop (including the “run again without prompts” line).
 
 Lock conventions that users rely on in unit tests next to `parse-args` and `help` (help triggers, bare invocation, exit-oriented parse results, “flag equivalent exists for each prompt”).
 

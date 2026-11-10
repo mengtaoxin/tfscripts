@@ -1,4 +1,5 @@
 import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { runCliMain } from './lib/cli/run-main.js';
 import { HELP_TEXT } from './lib/open-in-vscode/help.js';
 import { parseArgs } from './lib/open-in-vscode/parse-args.js';
 import { runOpen } from './lib/open-in-vscode/run.js';
@@ -27,5 +28,4 @@ async function main(argv: readonly string[]): Promise<number> {
   return result.exitCode;
 }
 
-const exitCode = await main(process.argv.slice(2));
-process.exit(exitCode);
+await runCliMain(() => main(process.argv.slice(2)));

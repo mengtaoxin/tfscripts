@@ -1,5 +1,6 @@
 import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
-import { canPrompt } from './lib/cli/interactive.js';
+import { resolveInteractiveOptions } from './lib/cli/resolve-options.js';
+import { runCliMain } from './lib/cli/run-main.js';
 import {
   clearKeepAwakeState,
   defaultStatePath,
@@ -75,29 +76,23 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   const presets = { hours: parsed.hours, screen: parsed.screen };
-  const needsPrompt = presets.hours === undefined || presets.screen === undefined;
+  const resolved = await resolveInteractiveOptions({
+    noInput: parsed.noInput,
+    needsPrompt: presets.hours === undefined || presets.screen === undefined,
+    prompt: () => promptKeepAwakeOptions(presets),
+    applyDefaults: () => applyKeepAwakeDefaults(presets),
+    formatInvocation: formatKeepAwakeInvocation,
+  });
 
-  let options;
-  let prompted = false;
-  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
-    options = await promptKeepAwakeOptions(presets);
-    prompted = true;
-  } else {
-    const resolved = applyKeepAwakeDefaults(presets);
-    if ('missing' in resolved) {
-      console.error(
-        `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
-      );
-      console.error('Run "keep-awake help" for usage.');
-      return EXIT_USAGE;
-    }
-    options = resolved;
+  if (!resolved.ok) {
+    console.error(
+      `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
+    );
+    console.error('Run "keep-awake help" for usage.');
+    return EXIT_USAGE;
   }
 
-  if (prompted) {
-    console.error(`Run this again without prompts:\n  ${formatKeepAwakeInvocation(options)}`);
-  }
-
+  const options = resolved.options;
   const result = startKeepAwakeSession({
     hours: options.hours,
     screen: options.screen,
@@ -119,13 +114,4 @@ async function main(argv: readonly string[]): Promise<number> {
   return 0;
 }
 
-try {
-  const exitCode = await main(process.argv.slice(2));
-  process.exit(exitCode);
-} catch (error) {
-  if (error instanceof Error && error.name === 'ExitPromptError') {
-    console.error('Cancelled.');
-    process.exit(1);
-  }
-  throw error;
-}
+await runCliMain(() => main(process.argv.slice(2)));

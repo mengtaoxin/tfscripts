@@ -1,5 +1,5 @@
+import { hasUnknownFlags, parseYesNoFlag, readFlagValue } from '../cli/flags.js';
 import { isHelpToken } from '../cli/help-args.js';
-import { parseYesNo } from '../cli/yes-no.js';
 
 export type ParseSuccess =
   | { ok: true; command: 'help' }
@@ -13,38 +13,7 @@ export type ParseFailure = {
 
 export type ParseResult = ParseSuccess | ParseFailure;
 
-function readFlagValue(
-  args: readonly string[],
-  name: string,
-): { present: false } | { present: true; value: string | undefined } {
-  const index = args.indexOf(name);
-  if (index === -1) {
-    return { present: false };
-  }
-  const value = args[index + 1];
-  if (value === undefined || value.startsWith('-')) {
-    return { present: true, value: undefined };
-  }
-  return { present: true, value };
-}
-
-function hasUnknownFlags(args: readonly string[]): string | undefined {
-  const known = new Set(['--path', '--reuse-window']);
-  for (let i = 0; i < args.length; i++) {
-    const token = args[i];
-    if (token === undefined || !token.startsWith('-')) {
-      continue;
-    }
-    if (!known.has(token)) {
-      return token;
-    }
-    const next = args[i + 1];
-    if (next !== undefined && !next.startsWith('-')) {
-      i += 1;
-    }
-  }
-  return undefined;
-}
+const KNOWN_FLAGS = new Set(['--path', '--reuse-window']);
 
 export function parseArgs(argv: readonly string[]): ParseResult {
   if (argv.length === 0) {
@@ -65,7 +34,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     };
   }
 
-  const unknown = hasUnknownFlags(argv);
+  const unknown = hasUnknownFlags(argv, KNOWN_FLAGS);
   if (unknown !== undefined) {
     return {
       ok: false,
@@ -90,31 +59,15 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     };
   }
 
-  const reuseFlag = readFlagValue(argv, '--reuse-window');
-  let reuseWindow = true;
-  if (reuseFlag.present) {
-    if (reuseFlag.value === undefined) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--reuse-window must be "yes" or "no".',
-      };
-    }
-    const parsed = parseYesNo(reuseFlag.value);
-    if (parsed === null) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: '--reuse-window must be "yes" or "no".',
-      };
-    }
-    reuseWindow = parsed;
+  const reuse = parseYesNoFlag(argv, '--reuse-window');
+  if (!reuse.ok) {
+    return { ok: false, reason: 'invalid', message: reuse.message };
   }
 
   return {
     ok: true,
     command: 'open',
     path: pathFlag.value,
-    reuseWindow,
+    reuseWindow: reuse.value ?? true,
   };
 }

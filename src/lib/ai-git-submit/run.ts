@@ -12,8 +12,8 @@ import {
   type GitDeps,
 } from './git.js';
 import { generateCommitMessage, type GenerateCommitMessageDeps } from './llm.js';
-import { isNetworkError } from './network-error.js';
-import { withExponentialBackoff } from './retry.js';
+import { withExponentialBackoff } from '../retry-policy/backoff.js';
+import { isNetworkError } from '../retry-policy/network-error.js';
 
 export interface SubmitOptions {
   add: boolean;

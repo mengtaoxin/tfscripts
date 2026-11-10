@@ -22,7 +22,7 @@ const NETWORK_PATTERNS = [
   /fetch failed/i,
 ];
 
-function errorMessage(error: unknown): string {
+export function errorMessage(error: unknown): string {
   if (error instanceof Error) {
     const withStderr = error as Error & { stderr?: string };
     const stderr = typeof withStderr.stderr === 'string' ? withStderr.stderr.trim() : '';

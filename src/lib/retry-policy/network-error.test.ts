@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isNetworkError } from './network-error.js';
+import { errorMessage, isNetworkError } from './network-error.js';
 
 describe('isNetworkError', () => {
   it('detects system error codes on the error or its cause', () => {
@@ -26,5 +26,15 @@ describe('isNetworkError', () => {
       isNetworkError(new Error('LLM request failed with status 402: insufficient balance')),
     ).toBe(false);
     expect(isNetworkError(new Error('LLM returned an empty commit message.'))).toBe(false);
+    expect(isNetworkError(new Error('merge conflict in a.ts'))).toBe(false);
+  });
+});
+
+describe('errorMessage', () => {
+  it('prefers stderr when present', () => {
+    const err = Object.assign(new Error('spawn failed'), {
+      stderr: 'fatal: unable to access\n',
+    });
+    expect(errorMessage(err)).toBe('fatal: unable to access');
   });
 });

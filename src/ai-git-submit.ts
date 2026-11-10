@@ -1,5 +1,6 @@
-import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
-import { canPrompt } from './lib/cli/interactive.js';
+import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { resolveInteractiveOptions } from './lib/cli/resolve-options.js';
+import { runCliMain } from './lib/cli/run-main.js';
 import { parseArgs } from './lib/ai-git-submit/parse-args.js';
 import {
   applySubmitDefaults,
@@ -27,32 +28,25 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   const presets = { add: parsed.add, push: parsed.push };
-  const needsPrompt = presets.add === undefined || presets.push === undefined;
+  const resolved = await resolveInteractiveOptions({
+    noInput: parsed.noInput,
+    needsPrompt: presets.add === undefined || presets.push === undefined,
+    prompt: () => promptSubmitOptions(presets),
+    applyDefaults: () => applySubmitDefaults(presets),
+    formatInvocation: formatSubmitInvocation,
+  });
 
-  let options;
-  let prompted = false;
-  if (needsPrompt && canPrompt({ noInput: parsed.noInput })) {
-    options = await promptSubmitOptions(presets);
-    prompted = true;
-  } else {
-    options = applySubmitDefaults(presets);
+  if (!resolved.ok) {
+    // applySubmitDefaults always fills; keep the branch for the shared contract.
+    console.error(
+      `Missing required option${resolved.missing.length > 1 ? 's' : ''}: ${resolved.missing.join(', ')}.`,
+    );
+    console.error('Run "ai-git-submit help" for usage.');
+    return EXIT_USAGE;
   }
 
-  if (prompted) {
-    console.error(`Run this again without prompts:\n  ${formatSubmitInvocation(options)}`);
-  }
-
-  const result = await runSubmit(options);
+  const result = await runSubmit(resolved.options);
   return result.exitCode;
 }
 
-try {
-  const exitCode = await main(process.argv.slice(2));
-  process.exit(exitCode);
-} catch (error) {
-  if (error instanceof Error && error.name === 'ExitPromptError') {
-    console.error('Cancelled.');
-    process.exit(1);
-  }
-  throw error;
-}
+await runCliMain(() => main(process.argv.slice(2)));
