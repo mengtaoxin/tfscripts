@@ -12,9 +12,10 @@ describe('parseArgs', () => {
     expect(parseArgs(['--help'])).toEqual({ ok: true, command: 'help' });
   });
 
-  it('parses update and check commands', () => {
+  it('parses update, check, and list commands', () => {
     expect(parseArgs(['update'])).toEqual({ ok: true, command: 'update' });
     expect(parseArgs(['check'])).toEqual({ ok: true, command: 'check' });
+    expect(parseArgs(['list'])).toEqual({ ok: true, command: 'list' });
   });
 
   it('rejects unknown commands', () => {

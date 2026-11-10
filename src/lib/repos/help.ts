@@ -6,6 +6,7 @@ Usage:
   repos help
   repos update
   repos check
+  repos list
 
 Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
 
@@ -25,9 +26,11 @@ Commands:
           up to 3 times with exponential backoff.
   check   Fetch and show a status table: remote-behind commits, local-ahead
           commits, and uncommitted dirty line counts. Does not merge.
+  list    Show configured repos as a REPO / PATH table. Does not touch git.
 
 Examples:
   repos --help
   repos update
   repos check
+  repos list
 `;

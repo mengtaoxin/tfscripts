@@ -8,5 +8,6 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('repos --help');
     expect(HELP_TEXT).toContain('repos update');
     expect(HELP_TEXT).toContain('repos check');
+    expect(HELP_TEXT).toContain('repos list');
   });
 });

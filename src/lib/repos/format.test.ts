@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatCheckTable,
+  formatListTable,
   formatProgressLine,
   formatResultTable,
   formatSummary,
@@ -8,6 +9,7 @@ import {
 } from './format.js';
 import type { CheckOneResult } from './check-one.js';
 import type { SyncOneResult } from './sync-one.js';
+import type { RepoEntry } from './config.js';
 
 describe('format', () => {
   it('maps statuses to English labels with markers', () => {
@@ -67,6 +69,19 @@ describe('format', () => {
         { name: 'd', path: '/d', branch: 'main', status: 'failed', reason: 'y' },
       ]),
     ).toBe('Summary: 4 repos / 1 up to date / 1 updated / 2 failed');
+  });
+
+  it('formats a list table with repo name and path', () => {
+    const repos: RepoEntry[] = [
+      { name: 'repo-1', path: '/exampleDir/repo-1' },
+      { name: 'my-long-repo', path: '/Users/me/repos/my-long-repo' },
+    ];
+
+    expect(formatListTable(repos)).toEqual([
+      'REPO          PATH',
+      'repo-1        /exampleDir/repo-1',
+      'my-long-repo  /Users/me/repos/my-long-repo',
+    ]);
   });
 
   it('formats a check table with dashes for zero counts', () => {

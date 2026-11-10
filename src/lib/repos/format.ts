@@ -1,7 +1,9 @@
 import type { CheckOneResult } from './check-one.js';
+import type { RepoEntry } from './config.js';
 import type { SyncOneResult, SyncStatus } from './sync-one.js';
 
 const HEADER_REPO = 'REPO';
+const HEADER_PATH = 'PATH';
 const HEADER_BRANCH = 'BRANCH';
 const HEADER_STATUS = 'STATUS';
 const HEADER_REMOTE = 'REMOTE';
@@ -64,6 +66,19 @@ export function formatProgressLine(completed: number, total: number): string {
 
 function countOrDash(value: number): string {
   return value === 0 ? '-' : String(value);
+}
+
+export function formatListTable(repos: readonly RepoEntry[]): string[] {
+  let nameWidth = HEADER_REPO.length;
+
+  for (const entry of repos) {
+    nameWidth = Math.max(nameWidth, entry.name.length);
+  }
+
+  const header = [pad(HEADER_REPO, nameWidth), HEADER_PATH].join(COLUMN_GAP);
+  const rows = repos.map((entry) => [pad(entry.name, nameWidth), entry.path].join(COLUMN_GAP));
+
+  return [header, ...rows];
 }
 
 export function formatCheckTable(results: readonly CheckOneResult[]): string[] {

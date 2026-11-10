@@ -1,4 +1,4 @@
-export type ParseSuccess = { ok: true; command: 'help' | 'update' | 'check' };
+export type ParseSuccess = { ok: true; command: 'help' | 'update' | 'check' | 'list' };
 
 export type ParseFailure = {
   ok: false;
@@ -36,7 +36,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     };
   }
 
-  if (first === 'update' || first === 'check') {
+  if (first === 'update' || first === 'check' || first === 'list') {
     if (rest.length > 0) {
       return {
         ok: false,
