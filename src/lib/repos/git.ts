@@ -30,6 +30,17 @@ export async function countAheadUpstream(deps: GitDeps): Promise<number> {
   return Number.isFinite(count) ? count : 0;
 }
 
+export async function countCommitsSince(deps: GitDeps, days: number): Promise<number> {
+  const { stdout } = await execGit(deps, [
+    'rev-list',
+    '--count',
+    `--since=${days} days ago`,
+    'HEAD',
+  ]);
+  const count = Number.parseInt(stdout.trim(), 10);
+  return Number.isFinite(count) ? count : 0;
+}
+
 function parseNumstatLines(stdout: string): number {
   let total = 0;
   for (const line of stdout.split('\n')) {

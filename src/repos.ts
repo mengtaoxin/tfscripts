@@ -29,7 +29,9 @@ async function main(argv: readonly string[]): Promise<number> {
   }
 
   if (parsed.command === 'list') {
-    const result = await runRepoList();
+    const result = await runRepoList({
+      showCommitCountDays: parsed.showCommitCountDays,
+    });
     return result.exitCode;
   }
 

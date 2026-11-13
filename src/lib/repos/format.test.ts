@@ -84,6 +84,26 @@ describe('format', () => {
     ]);
   });
 
+  it('formats a list table with recent commit counts', () => {
+    const repos: RepoEntry[] = [
+      { name: 'repo-1', path: '/a' },
+      { name: 'my-long-repo', path: '/Users/me/repos/my-long-repo' },
+      { name: 'broken', path: '/missing' },
+    ];
+
+    expect(
+      formatListTable(repos, {
+        showCommitCountDays: 7,
+        commitCounts: [0, 12, null],
+      }),
+    ).toEqual([
+      'REPO          PATH                          COMMITS (7d)',
+      'repo-1        /a                            0',
+      'my-long-repo  /Users/me/repos/my-long-repo  12',
+      'broken        /missing                      -',
+    ]);
+  });
+
   it('formats a check table with dashes for zero counts', () => {
     const results: CheckOneResult[] = [
       {

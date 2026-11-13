@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   countAheadUpstream,
   countBehindUpstream,
+  countCommitsSince,
   countDirtyLines,
   errorMessage,
   fetchUpstream,
@@ -50,6 +51,16 @@ describe('repos git helpers', () => {
       'git',
       ['rev-list', '--count', '@{u}..HEAD'],
       expect.any(Object),
+    );
+  });
+
+  it('countCommitsSince counts commits since N days ago', async () => {
+    const execFile = vi.fn().mockResolvedValue({ stdout: '5\n', stderr: '' });
+    await expect(countCommitsSince({ execFile, cwd: '/repo' }, 7)).resolves.toBe(5);
+    expect(execFile).toHaveBeenCalledWith(
+      'git',
+      ['rev-list', '--count', '--since=7 days ago', 'HEAD'],
+      expect.objectContaining({ cwd: '/repo' }),
     );
   });
 

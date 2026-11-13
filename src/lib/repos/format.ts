@@ -68,15 +68,48 @@ function countOrDash(value: number): string {
   return value === 0 ? '-' : String(value);
 }
 
-export function formatListTable(repos: readonly RepoEntry[]): string[] {
+export interface FormatListTableOptions {
+  readonly showCommitCountDays: number;
+  readonly commitCounts: readonly (number | null)[];
+}
+
+function commitCountHeader(days: number): string {
+  return `COMMITS (${days}d)`;
+}
+
+function commitCountText(value: number | null): string {
+  return value === null ? '-' : String(value);
+}
+
+export function formatListTable(
+  repos: readonly RepoEntry[],
+  options?: FormatListTableOptions,
+): string[] {
   let nameWidth = HEADER_REPO.length;
+  let pathWidth = HEADER_PATH.length;
 
   for (const entry of repos) {
     nameWidth = Math.max(nameWidth, entry.name.length);
+    pathWidth = Math.max(pathWidth, entry.path.length);
   }
 
-  const header = [pad(HEADER_REPO, nameWidth), HEADER_PATH].join(COLUMN_GAP);
-  const rows = repos.map((entry) => [pad(entry.name, nameWidth), entry.path].join(COLUMN_GAP));
+  if (options === undefined) {
+    const header = [pad(HEADER_REPO, nameWidth), HEADER_PATH].join(COLUMN_GAP);
+    const rows = repos.map((entry) => [pad(entry.name, nameWidth), entry.path].join(COLUMN_GAP));
+    return [header, ...rows];
+  }
+
+  const commitsHeader = commitCountHeader(options.showCommitCountDays);
+  const header = [pad(HEADER_REPO, nameWidth), pad(HEADER_PATH, pathWidth), commitsHeader].join(
+    COLUMN_GAP,
+  );
+
+  const rows = repos.map((entry, index) => {
+    const count = options.commitCounts[index] ?? null;
+    return [pad(entry.name, nameWidth), pad(entry.path, pathWidth), commitCountText(count)].join(
+      COLUMN_GAP,
+    );
+  });
 
   return [header, ...rows];
 }

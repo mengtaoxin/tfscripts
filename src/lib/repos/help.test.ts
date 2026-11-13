@@ -21,5 +21,7 @@ describe('helpTextFor', () => {
     expect(HELP_UPDATE).toContain('repos update');
     expect(HELP_CHECK).toContain('repos check');
     expect(HELP_LIST).toContain('repos list');
+    expect(HELP_LIST).toContain('--show-commit-count');
+    expect(HELP_LIST).toContain('-scc');
   });
 });

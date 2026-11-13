@@ -30,6 +30,7 @@ Examples:
   repos update
   repos check
   repos list
+  repos list --show-commit-count
   repos help update
 `;
 
@@ -65,12 +66,25 @@ export const HELP_LIST = `repos list — list configured repos
 
 Usage:
   repos list
+  repos list --show-commit-count [days]
+  repos list -scc [days]
   repos help list
   repos list --help
 
-Shows configured repos as a REPO / PATH table. Does not touch git.
+Shows configured repos as a REPO / PATH table. Without flags, does not
+touch git.
+
+Options:
+  --show-commit-count [days], -scc [days]
+      Add a COMMITS (Nd) column with commits on HEAD in the last N days
+      (default N=7). Failed repos show "-".
 
 Reads ~/.tfscripts/repos/settings.json.
+
+Examples:
+  repos list
+  repos list --show-commit-count
+  repos list -scc 14
 `;
 
 export const HELP_BY_TOPIC = {
