@@ -19,6 +19,8 @@ export interface RepoEntry {
   sshHost?: string;
   /** Optional argv fragments for `repos submit` (ai-git-submit flags). */
   aiGitSubmitParameters?: readonly string[];
+  /** Optional shell commands run after a successful `updated` sync. */
+  afterUpdateCommands?: readonly string[];
 }
 
 export const DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS = 10;
@@ -84,25 +86,33 @@ function parseSshHost(
   return raw.trim();
 }
 
-function parseAiGitSubmitParameters(raw: unknown, index: number): readonly string[] | undefined {
+function parseStringArrayField(
+  raw: unknown,
+  index: number,
+  fieldName: string,
+): readonly string[] | undefined {
   if (raw === undefined) {
     return undefined;
   }
   if (!Array.isArray(raw)) {
-    throw new ConfigError(
-      `repos[${index}].ai-git-submit-parameters must be an array of non-empty strings.`,
-    );
+    throw new ConfigError(`repos[${index}].${fieldName} must be an array of non-empty strings.`);
   }
   const values: string[] = [];
   for (const item of raw) {
     if (typeof item !== 'string' || item.trim() === '') {
-      throw new ConfigError(
-        `repos[${index}].ai-git-submit-parameters must be an array of non-empty strings.`,
-      );
+      throw new ConfigError(`repos[${index}].${fieldName} must be an array of non-empty strings.`);
     }
     values.push(item.trim());
   }
   return values;
+}
+
+function parseAiGitSubmitParameters(raw: unknown, index: number): readonly string[] | undefined {
+  return parseStringArrayField(raw, index, 'ai-git-submit-parameters');
+}
+
+function parseAfterUpdateCommands(raw: unknown, index: number): readonly string[] | undefined {
+  return parseStringArrayField(raw, index, 'after-update-commands');
 }
 
 const SHOW_COMMIT_COUNT_KEY = 'list.show-commit-count';
@@ -184,6 +194,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
       environment?: unknown;
       'ssh-host'?: unknown;
       'ai-git-submit-parameters'?: unknown;
+      'after-update-commands'?: unknown;
     };
     const { path } = repoRecord;
     if (typeof path !== 'string' || path.trim() === '') {
@@ -196,6 +207,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
       repoRecord['ai-git-submit-parameters'],
       i,
     );
+    const afterUpdateCommands = parseAfterUpdateCommands(repoRecord['after-update-commands'], i);
     const trimmedPath = path.trim();
     const resolvedPath = environment === 'ssh' ? trimmedPath : expandHome(trimmedPath, home);
 
@@ -209,6 +221,9 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     }
     if (aiGitSubmitParameters !== undefined) {
       entry.aiGitSubmitParameters = aiGitSubmitParameters;
+    }
+    if (afterUpdateCommands !== undefined) {
+      entry.afterUpdateCommands = afterUpdateCommands;
     }
     entries.push(entry);
   }

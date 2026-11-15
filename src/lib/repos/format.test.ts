@@ -53,6 +53,42 @@ describe('format', () => {
     expect(formatResultTable([])).toEqual(['REPO  BRANCH  STATUS']);
   });
 
+  it('adds an AFTER UPDATE column when showAfterUpdate is set', () => {
+    const results: SyncOneResult[] = [
+      {
+        name: 'repo-1',
+        path: '/r/repo-1',
+        branch: 'main',
+        status: 'up-to-date',
+      },
+      {
+        name: 'repo-2',
+        path: '/r/repo-2',
+        branch: 'main',
+        status: 'updated',
+        afterUpdate: { kind: 'success' },
+      },
+      {
+        name: 'repo-3',
+        path: '/r/repo-3',
+        branch: 'main',
+        status: 'updated',
+        afterUpdate: {
+          kind: 'failed',
+          shortMessage: 'npm ERR! missing',
+          logPath: '/tmp/1-abc.log',
+        },
+      },
+    ];
+
+    expect(formatResultTable(results, { showAfterUpdate: true })).toEqual([
+      'REPO    BRANCH  STATUS        AFTER UPDATE',
+      'repo-1  main    ✓ up to date  -',
+      'repo-2  main    ↑ updated     success',
+      'repo-3  main    ↑ updated     failed: npm ERR! missing (log: /tmp/1-abc.log)',
+    ]);
+  });
+
   it('formats an in-place progress line', () => {
     expect(formatProgressLine(0, 23)).toBe('repos processing: 0/23');
     expect(formatProgressLine(1, 20)).toBe('repos processing: 1/20');

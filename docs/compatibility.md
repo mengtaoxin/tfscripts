@@ -44,7 +44,7 @@ Calls `git` through `execFile` (`src/lib/ai-git-submit/git.ts`) and an HTTPS LLM
 
 Calls `git` through `execFile` (`src/lib/repos/git.ts`). Settings live at `~/.tfscripts/repos/settings.json`. Paths in settings may use `~`. Per-repo `environment` / `ssh-host` (siblings of `path`) can run git over `ssh` with BatchMode key-only auth; that needs an `ssh` client on `PATH` and a matching `~/.ssh/config` host. Works on any OS where Node and `git` work; SSH mode additionally needs OpenSSH-compatible `ssh`.
 
-`repos submit` reuses the ai-git-submit flow: LLM and `AI_GIT_SUBMIT_*` stay on the machine running `repos`; for `environment: "ssh"` git (including commit stdin) runs over SSH like `update` / `check`. Optional per-repo `ai-git-submit-parameters` are documented in `repos` help / `src/lib/repos/config.ts`.
+`repos submit` reuses the ai-git-submit flow: LLM and `AI_GIT_SUBMIT_*` stay on the machine running `repos`; for `environment: "ssh"` git (including commit stdin) runs over SSH like `update` / `check`. Optional per-repo `ai-git-submit-parameters` are documented in `repos` help / `src/lib/repos/config.ts`. Optional `after-update-commands` use local `sh -c` or remote `ssh`+`sh` in the same environment as that repo.
 
 ### `open-in-vscode`
 

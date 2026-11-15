@@ -6,6 +6,7 @@ const HEADER_REPO = 'REPO';
 const HEADER_PATH = 'PATH';
 const HEADER_BRANCH = 'BRANCH';
 const HEADER_STATUS = 'STATUS';
+const HEADER_AFTER_UPDATE = 'AFTER UPDATE';
 const HEADER_REMOTE = 'REMOTE';
 const HEADER_LOCAL_AHEAD = 'LOCAL AHEAD';
 const HEADER_DIRTY_LINES = 'DIRTY LINES';
@@ -34,28 +35,57 @@ function statusText(result: SyncOneResult): string {
   return label;
 }
 
+function afterUpdateText(result: SyncOneResult): string {
+  const outcome = result.afterUpdate;
+  if (outcome === undefined) {
+    return '-';
+  }
+  if (outcome.kind === 'success') {
+    return 'success';
+  }
+  return `failed: ${outcome.shortMessage} (log: ${outcome.logPath})`;
+}
+
 function pad(value: string, width: number): string {
   return value.padEnd(width, ' ');
 }
 
-export function formatResultTable(results: readonly SyncOneResult[]): string[] {
+export interface FormatResultTableOptions {
+  readonly showAfterUpdate: boolean;
+}
+
+export function formatResultTable(
+  results: readonly SyncOneResult[],
+  options?: FormatResultTableOptions,
+): string[] {
   let nameWidth = HEADER_REPO.length;
   let branchWidth = HEADER_BRANCH.length;
+  let statusWidth = HEADER_STATUS.length;
 
   for (const result of results) {
     nameWidth = Math.max(nameWidth, result.name.length);
     branchWidth = Math.max(branchWidth, branchText(result).length);
+    statusWidth = Math.max(statusWidth, statusText(result).length);
   }
 
-  const header = [pad(HEADER_REPO, nameWidth), pad(HEADER_BRANCH, branchWidth), HEADER_STATUS].join(
-    COLUMN_GAP,
-  );
+  const showAfterUpdate = options?.showAfterUpdate === true;
 
-  const rows = results.map((result) =>
-    [pad(result.name, nameWidth), pad(branchText(result), branchWidth), statusText(result)].join(
-      COLUMN_GAP,
-    ),
-  );
+  const header = [
+    pad(HEADER_REPO, nameWidth),
+    pad(HEADER_BRANCH, branchWidth),
+    showAfterUpdate ? pad(HEADER_STATUS, statusWidth) : HEADER_STATUS,
+    ...(showAfterUpdate ? [HEADER_AFTER_UPDATE] : []),
+  ].join(COLUMN_GAP);
+
+  const rows = results.map((result) => {
+    const status = statusText(result);
+    return [
+      pad(result.name, nameWidth),
+      pad(branchText(result), branchWidth),
+      showAfterUpdate ? pad(status, statusWidth) : status,
+      ...(showAfterUpdate ? [afterUpdateText(result)] : []),
+    ].join(COLUMN_GAP);
+  });
 
   return [header, ...rows];
 }

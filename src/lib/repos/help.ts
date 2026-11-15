@@ -20,7 +20,8 @@ Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
         "path": "~/repos/repo-3",
         "environment": "ssh",
         "ssh-host": "devbox",
-        "ai-git-submit-parameters": ["--add yes", "--push yes"]
+        "ai-git-submit-parameters": ["--add yes", "--push yes"],
+        "after-update-commands": ["npm install", "npm run build"]
       }
     ]
   }
@@ -33,6 +34,7 @@ Optional per-repo fields (siblings of path):
   environment               "local" (default) or "ssh"
   ssh-host                  Host alias from ~/.ssh/config (required when environment is ssh)
   ai-git-submit-parameters   Argv fragments for repos submit (ai-git-submit flags)
+  after-update-commands     Shell commands run in the repo path after status updated
 
 SSH mode runs git on the remote host with key-based auth only (no password
 prompts). Unknown host fingerprints are not auto-accepted; that repo fails
@@ -72,6 +74,10 @@ row instead of fetching again.
 
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
+
+Optional after-update-commands run in the repo path only when status is
+updated (local sh -c, or ssh+sh for environment ssh). Failures show in
+an AFTER UPDATE column and do not change the exit code.
 
 Reads ~/.tfscripts/repos/settings.json.
 `;

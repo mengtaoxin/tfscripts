@@ -152,4 +152,88 @@ describe('runRepoSync', () => {
     expect(exit.exitCode).toBe(1);
     expect(error).toHaveBeenCalledWith('Settings file not found');
   });
+
+  it('runs after-update only for updated repos and keeps exit 0 on hook failure', async () => {
+    const lines: string[] = [];
+    const afterUpdate = vi.fn(async () => ({
+      kind: 'failed' as const,
+      shortMessage: 'npm ERR! boom',
+      logPath: '/tmp/hook.log',
+    }));
+
+    const exit = await runRepoSync({
+      loadSettings: () => ({
+        repos: [
+          {
+            name: 'with-hooks',
+            path: '/a',
+            afterUpdateCommands: ['npm install'],
+          },
+          { name: 'plain', path: '/b' },
+        ],
+        remoteOperationThrottlingSeconds: 10,
+      }),
+      syncOne: async (entry) => {
+        if (entry.name === 'with-hooks') {
+          return {
+            name: entry.name,
+            path: entry.path,
+            branch: 'main',
+            status: 'updated',
+          };
+        }
+        return {
+          name: entry.name,
+          path: entry.path,
+          branch: 'main',
+          status: 'up-to-date',
+        };
+      },
+      runAfterUpdateCommands: afterUpdate,
+      log: (line) => lines.push(line),
+      setProgress: vi.fn(),
+      endProgress: vi.fn(),
+      error: vi.fn(),
+    });
+
+    expect(exit.exitCode).toBe(0);
+    expect(afterUpdate).toHaveBeenCalledTimes(1);
+    expect(afterUpdate).toHaveBeenCalledWith(expect.objectContaining({ name: 'with-hooks' }));
+    expect(lines).toEqual([
+      'REPO        BRANCH  STATUS        AFTER UPDATE',
+      'with-hooks  main    ↑ updated     failed: npm ERR! boom (log: /tmp/hook.log)',
+      'plain       main    ✓ up to date  -',
+      'Summary: 2 repos / 1 up to date / 1 updated / 0 failed',
+    ]);
+  });
+
+  it('does not run after-update when sync is up-to-date', async () => {
+    const afterUpdate = vi.fn();
+    const exit = await runRepoSync({
+      loadSettings: () => ({
+        repos: [
+          {
+            name: 'with-hooks',
+            path: '/a',
+            afterUpdateCommands: ['npm install'],
+          },
+        ],
+        remoteOperationThrottlingSeconds: 10,
+      }),
+      syncOne: async (entry) => ({
+        name: entry.name,
+        path: entry.path,
+        branch: 'main',
+        status: 'up-to-date',
+      }),
+      runAfterUpdateCommands: afterUpdate,
+      log: vi.fn(),
+      setProgress: vi.fn(),
+      endProgress: vi.fn(),
+      error: vi.fn(),
+    });
+
+    expect(exit.exitCode).toBe(0);
+    expect(afterUpdate).not.toHaveBeenCalled();
+  });
 });

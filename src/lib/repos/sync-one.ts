@@ -1,3 +1,4 @@
+import type { AfterUpdateOutcome } from './after-update.js';
 import type { RepoEntry } from './config.js';
 import { fetchWithRetry, type FetchWithRetryDeps } from './fetch-retry.js';
 import {
@@ -26,6 +27,7 @@ export interface SyncOneResult {
   branch: string;
   status: SyncStatus;
   reason?: string;
+  afterUpdate?: AfterUpdateOutcome;
 }
 
 export interface SyncOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {

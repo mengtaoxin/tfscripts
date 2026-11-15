@@ -233,6 +233,61 @@ describe('loadSettings', () => {
     ).toThrow(/repos\[0\]\.ai-git-submit-parameters must be an array of non-empty strings/);
   });
 
+  it('loads optional after-update-commands next to path', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () =>
+        JSON.stringify({
+          repos: [
+            {
+              path: '~/code/foo',
+              'after-update-commands': ['npm install', 'npm run build'],
+            },
+            { path: '/local/app' },
+          ],
+        }),
+    });
+
+    expect(settings.repos[0]).toEqual({
+      path: '/Users/me/code/foo',
+      name: 'foo',
+      environment: 'local',
+      afterUpdateCommands: ['npm install', 'npm run build'],
+    });
+    expect(settings.repos[1]).toEqual({
+      path: '/local/app',
+      name: 'app',
+      environment: 'local',
+    });
+  });
+
+  it('rejects non-array after-update-commands', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            repos: [{ path: '/abs/bar', 'after-update-commands': 'npm install' }],
+          }),
+      }),
+    ).toThrow(/repos\[0\]\.after-update-commands must be an array of non-empty strings/);
+  });
+
+  it('rejects empty strings in after-update-commands', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            repos: [{ path: '/abs/bar', 'after-update-commands': ['npm install', '  '] }],
+          }),
+      }),
+    ).toThrow(/repos\[0\]\.after-update-commands must be an array of non-empty strings/);
+  });
+
   it('defaults each repo environment to local', () => {
     const settings = loadSettings({
       settingsPath: '/cfg/settings.json',
