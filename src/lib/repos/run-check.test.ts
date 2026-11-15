@@ -117,4 +117,40 @@ describe('runRepoCheck', () => {
     expect(exit.exitCode).toBe(1);
     expect(error).toHaveBeenCalledWith('Settings file not found');
   });
+
+  it('prints a COMMITS column when settings include showCommitCountDays', async () => {
+    const lines: string[] = [];
+    const checkOne = vi.fn(async (entry: { name: string; path: string }) => ({
+      name: entry.name,
+      path: entry.path,
+      branch: 'main',
+      status: 'ok' as const,
+      remoteBehind: 0,
+      localAhead: 0,
+      dirtyLines: 0,
+      commitCount: 5,
+    }));
+
+    const exit = await runRepoCheck({
+      loadSettings: () => ({
+        repos: [{ name: 'repo-1', path: '/a' }],
+        showCommitCountDays: 14,
+      }),
+      checkOne,
+      log: (line) => lines.push(line),
+      setProgress: vi.fn(),
+      endProgress: vi.fn(),
+      error: vi.fn(),
+    });
+
+    expect(exit.exitCode).toBe(0);
+    expect(checkOne).toHaveBeenCalledWith(
+      { name: 'repo-1', path: '/a' },
+      expect.objectContaining({ showCommitCountDays: 14 }),
+    );
+    expect(lines).toEqual([
+      'REPO    BRANCH  REMOTE  LOCAL AHEAD  DIRTY LINES  COMMITS (14d)',
+      'repo-1  main    -       -            -            5',
+    ]);
+  });
 });

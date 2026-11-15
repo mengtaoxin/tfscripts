@@ -23,6 +23,8 @@ export interface RepoEntry {
 
 export interface RepoSyncSettings {
   repos: readonly RepoEntry[];
+  /** When set, `repos check` shows a COMMITS (Nd) column for the last N days. */
+  showCommitCountDays?: number;
 }
 
 export function defaultSettingsPath(home: string = homedir()): string {
@@ -96,6 +98,18 @@ function parseAiGitSubmitParameters(raw: unknown, index: number): readonly strin
   return values;
 }
 
+const SHOW_COMMIT_COUNT_KEY = 'list.show-commit-count';
+
+function parseShowCommitCountDays(raw: unknown): number | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) {
+    throw new ConfigError(`${SHOW_COMMIT_COUNT_KEY} must be a positive integer.`);
+  }
+  return raw;
+}
+
 export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
   const home = deps.home ?? homedir();
   const readFile = deps.readFile ?? ((path) => readFileSync(path, 'utf8'));
@@ -123,7 +137,8 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     throw new ConfigError('Settings must include a "repos" array.');
   }
 
-  const { repos } = parsed as { repos: unknown };
+  const record = parsed as { repos: unknown; [SHOW_COMMIT_COUNT_KEY]?: unknown };
+  const { repos } = record;
   if (!Array.isArray(repos)) {
     throw new ConfigError('Settings "repos" must be an array.');
   }
@@ -131,26 +146,31 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     throw new ConfigError('Settings "repos" must contain at least one entry.');
   }
 
+  const showCommitCountDays = parseShowCommitCountDays(record[SHOW_COMMIT_COUNT_KEY]);
+
   const entries: RepoEntry[] = [];
   for (let i = 0; i < repos.length; i++) {
     const item = repos[i];
     if (item === null || typeof item !== 'object' || !('path' in item)) {
       throw new ConfigError(`repos[${i}] must have a string "path".`);
     }
-    const record = item as {
+    const repoRecord = item as {
       path: unknown;
       environment?: unknown;
       'ssh-host'?: unknown;
       'ai-git-submit-parameters'?: unknown;
     };
-    const { path } = record;
+    const { path } = repoRecord;
     if (typeof path !== 'string' || path.trim() === '') {
       throw new ConfigError(`repos[${i}].path must be a non-empty string.`);
     }
 
-    const environment = parseEnvironment(record.environment, i);
-    const sshHost = parseSshHost(record['ssh-host'], environment, i);
-    const aiGitSubmitParameters = parseAiGitSubmitParameters(record['ai-git-submit-parameters'], i);
+    const environment = parseEnvironment(repoRecord.environment, i);
+    const sshHost = parseSshHost(repoRecord['ssh-host'], environment, i);
+    const aiGitSubmitParameters = parseAiGitSubmitParameters(
+      repoRecord['ai-git-submit-parameters'],
+      i,
+    );
     const trimmedPath = path.trim();
     const resolvedPath = environment === 'ssh' ? trimmedPath : expandHome(trimmedPath, home);
 
@@ -168,5 +188,9 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     entries.push(entry);
   }
 
-  return { repos: entries };
+  const settings: RepoSyncSettings = { repos: entries };
+  if (showCommitCountDays !== undefined) {
+    settings.showCommitCountDays = showCommitCountDays;
+  }
+  return settings;
 }

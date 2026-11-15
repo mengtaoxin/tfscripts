@@ -68,57 +68,39 @@ function countOrDash(value: number): string {
   return value === 0 ? '-' : String(value);
 }
 
-export interface FormatListTableOptions {
-  readonly showCommitCountDays: number;
-  readonly commitCounts: readonly (number | null)[];
-}
-
 function commitCountHeader(days: number): string {
   return `COMMITS (${days}d)`;
 }
 
-function commitCountText(value: number | null): string {
-  return value === null ? '-' : String(value);
+function commitCountText(value: number | null | undefined): string {
+  return value === null || value === undefined ? '-' : String(value);
 }
 
-export function formatListTable(
-  repos: readonly RepoEntry[],
-  options?: FormatListTableOptions,
-): string[] {
+export function formatListTable(repos: readonly RepoEntry[]): string[] {
   let nameWidth = HEADER_REPO.length;
-  let pathWidth = HEADER_PATH.length;
 
   for (const entry of repos) {
     nameWidth = Math.max(nameWidth, entry.name.length);
-    pathWidth = Math.max(pathWidth, entry.path.length);
   }
 
-  if (options === undefined) {
-    const header = [pad(HEADER_REPO, nameWidth), HEADER_PATH].join(COLUMN_GAP);
-    const rows = repos.map((entry) => [pad(entry.name, nameWidth), entry.path].join(COLUMN_GAP));
-    return [header, ...rows];
-  }
-
-  const commitsHeader = commitCountHeader(options.showCommitCountDays);
-  const header = [pad(HEADER_REPO, nameWidth), pad(HEADER_PATH, pathWidth), commitsHeader].join(
-    COLUMN_GAP,
-  );
-
-  const rows = repos.map((entry, index) => {
-    const count = options.commitCounts[index] ?? null;
-    return [pad(entry.name, nameWidth), pad(entry.path, pathWidth), commitCountText(count)].join(
-      COLUMN_GAP,
-    );
-  });
-
+  const header = [pad(HEADER_REPO, nameWidth), HEADER_PATH].join(COLUMN_GAP);
+  const rows = repos.map((entry) => [pad(entry.name, nameWidth), entry.path].join(COLUMN_GAP));
   return [header, ...rows];
 }
 
-export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
+export interface FormatCheckTableOptions {
+  readonly showCommitCountDays: number;
+}
+
+export function formatCheckTable(
+  results: readonly CheckOneResult[],
+  options?: FormatCheckTableOptions,
+): string[] {
   let nameWidth = HEADER_REPO.length;
   let branchWidth = HEADER_BRANCH.length;
   let remoteWidth = HEADER_REMOTE.length;
   let aheadWidth = HEADER_LOCAL_AHEAD.length;
+  let dirtyWidth = HEADER_DIRTY_LINES.length;
 
   for (const result of results) {
     nameWidth = Math.max(nameWidth, result.name.length);
@@ -126,15 +108,20 @@ export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
     if (result.status === 'ok') {
       remoteWidth = Math.max(remoteWidth, countOrDash(result.remoteBehind).length);
       aheadWidth = Math.max(aheadWidth, countOrDash(result.localAhead).length);
+      dirtyWidth = Math.max(dirtyWidth, countOrDash(result.dirtyLines).length);
     }
   }
+
+  const showCommits = options !== undefined;
+  const commitsHeader = showCommits ? commitCountHeader(options.showCommitCountDays) : undefined;
 
   const header = [
     pad(HEADER_REPO, nameWidth),
     pad(HEADER_BRANCH, branchWidth),
     pad(HEADER_REMOTE, remoteWidth),
     pad(HEADER_LOCAL_AHEAD, aheadWidth),
-    HEADER_DIRTY_LINES,
+    showCommits ? pad(HEADER_DIRTY_LINES, dirtyWidth) : HEADER_DIRTY_LINES,
+    ...(commitsHeader !== undefined ? [commitsHeader] : []),
   ].join(COLUMN_GAP);
 
   const rows = results.map((result) => {
@@ -146,12 +133,14 @@ export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
         `✗ failed${reason}`,
       ].join(COLUMN_GAP);
     }
+    const dirtyText = countOrDash(result.dirtyLines);
     return [
       pad(result.name, nameWidth),
       pad(branchText(result), branchWidth),
       pad(countOrDash(result.remoteBehind), remoteWidth),
       pad(countOrDash(result.localAhead), aheadWidth),
-      countOrDash(result.dirtyLines),
+      showCommits ? pad(dirtyText, dirtyWidth) : dirtyText,
+      ...(showCommits ? [commitCountText(result.commitCount)] : []),
     ].join(COLUMN_GAP);
   });
 

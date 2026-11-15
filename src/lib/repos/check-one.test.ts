@@ -57,6 +57,50 @@ describe('checkOne', () => {
     expect(execFile).toHaveBeenCalledWith('git', ['fetch', '--prune'], expect.any(Object));
   });
 
+  it('counts recent commits when showCommitCountDays is set', async () => {
+    const execFile = createExecFile((joined) => {
+      if (joined === 'rev-parse --abbrev-ref HEAD') {
+        return { stdout: 'main\n', stderr: '' };
+      }
+      if (joined === 'rev-parse --abbrev-ref @{u}') {
+        return { stdout: 'origin/main\n', stderr: '' };
+      }
+      if (joined === 'rev-list --count HEAD..@{u}') {
+        return { stdout: '0\n', stderr: '' };
+      }
+      if (joined === 'rev-list --count @{u}..HEAD') {
+        return { stdout: '0\n', stderr: '' };
+      }
+      if (joined === 'rev-list --count --since=7 days ago HEAD') {
+        return { stdout: '4\n', stderr: '' };
+      }
+      if (joined === 'diff --numstat HEAD') {
+        return { stdout: '', stderr: '' };
+      }
+      if (joined === 'ls-files -o --exclude-standard') {
+        return { stdout: '', stderr: '' };
+      }
+      return { stdout: '', stderr: '' };
+    });
+
+    const result = await checkOne(entry, {
+      git: { execFile },
+      accessPath: async () => undefined,
+      showCommitCountDays: 7,
+    });
+
+    expect(result).toEqual({
+      name: 'repo-1',
+      path: '/repos/repo-1',
+      branch: 'main',
+      status: 'ok',
+      remoteBehind: 0,
+      localAhead: 0,
+      dirtyLines: 0,
+      commitCount: 4,
+    });
+  });
+
   it('reports zeros when clean and in sync', async () => {
     const execFile = createExecFile((joined) => {
       if (joined === 'rev-parse --abbrev-ref HEAD') {

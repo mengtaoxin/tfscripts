@@ -11,6 +11,7 @@ Usage:
 Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
 
   {
+    "list.show-commit-count": 7,
     "repos": [
       { "path": "/exampleDir/repo-1" },
       { "path": "~/repos/repo-2" },
@@ -24,6 +25,8 @@ Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
   }
 
 Each entry needs "path". The display name is the folder name.
+Optional top-level fields:
+  list.show-commit-count   Positive integer; when set, repos check adds a COMMITS (Nd) column
 Optional per-repo fields (siblings of path):
   environment               "local" (default) or "ssh"
   ssh-host                  Host alias from ~/.ssh/config (required when environment is ssh)
@@ -45,7 +48,6 @@ Examples:
   repos update
   repos check
   repos list
-  repos list --show-commit-count
   repos submit --name repo-3
   repos help update
 `;
@@ -78,6 +80,10 @@ Usage:
 Fetches and shows a status table: current branch, remote-behind commits,
 local-ahead commits, and uncommitted dirty line counts. Does not merge.
 
+When settings include top-level "list.show-commit-count" (a positive
+integer N), the table also includes a COMMITS (Nd) column with commits
+on HEAD in the last N days.
+
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
 
@@ -88,28 +94,15 @@ export const HELP_LIST = `repos list — list configured repos
 
 Usage:
   repos list
-  repos list --show-commit-count [days]
-  repos list -scc [days]
   repos help list
   repos list --help
 
-Shows configured repos as a REPO / PATH table. Without flags, does not
-touch git.
-
-Options:
-  --show-commit-count [days], -scc [days]
-      Add a COMMITS (Nd) column with commits on HEAD in the last N days
-      (default N=7). Failed repos show "-".
-
-Entries may set environment/ssh-host next to path for remote repos over
-SSH when counting commits.
+Shows configured repos as a REPO / PATH table. Does not touch git.
 
 Reads ~/.tfscripts/repos/settings.json.
 
 Examples:
   repos list
-  repos list --show-commit-count
-  repos list -scc 14
 `;
 
 export const HELP_SUBMIT = `repos submit — run ai-git-submit for one configured repo

@@ -22,6 +22,59 @@ describe('loadSettings', () => {
       { path: '/Users/me/code/foo', name: 'foo', environment: 'local' },
       { path: '/abs/bar', name: 'bar', environment: 'local' },
     ]);
+    expect(settings.showCommitCountDays).toBeUndefined();
+  });
+
+  it('loads optional list.show-commit-count as a positive integer', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () =>
+        JSON.stringify({
+          'list.show-commit-count': 7,
+          repos: [{ path: '/abs/bar' }],
+        }),
+    });
+
+    expect(settings.showCommitCountDays).toBe(7);
+  });
+
+  it('rejects invalid list.show-commit-count values', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'list.show-commit-count': 0,
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/list\.show-commit-count must be a positive integer/);
+
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'list.show-commit-count': 1.5,
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/list\.show-commit-count must be a positive integer/);
+
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'list.show-commit-count': '7',
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/list\.show-commit-count must be a positive integer/);
   });
 
   it('loads per-repo environment and ssh-host next to path', () => {

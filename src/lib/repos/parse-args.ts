@@ -1,12 +1,11 @@
-import { hasUnknownFlags, parsePositiveInt, readFlagValue } from '../cli/flags.js';
+import { hasUnknownFlags, readFlagValue } from '../cli/flags.js';
 import { isHelpToken } from '../cli/help-args.js';
 
 export type RepoAction = 'update' | 'check' | 'list' | 'submit';
 
 export type ParseSuccess =
   | { ok: true; command: 'help'; topic?: RepoAction }
-  | { ok: true; command: 'update' | 'check' }
-  | { ok: true; command: 'list'; showCommitCountDays?: number }
+  | { ok: true; command: 'update' | 'check' | 'list' }
   | { ok: true; command: 'submit'; name: string };
 
 export type ParseFailure = {
@@ -19,78 +18,10 @@ export type ParseResult = ParseSuccess | ParseFailure;
 
 const ACTIONS = new Set<string>(['update', 'check', 'list', 'submit']);
 
-const LIST_KNOWN_FLAGS = new Set(['--show-commit-count', '-scc']);
 const SUBMIT_KNOWN_FLAGS = new Set(['--name']);
-const DEFAULT_SHOW_COMMIT_COUNT_DAYS = 7;
 
 function isAction(token: string): token is RepoAction {
   return ACTIONS.has(token);
-}
-
-function parseListOptions(args: readonly string[]): ParseResult {
-  const unknown = hasUnknownFlags(args, LIST_KNOWN_FLAGS);
-  if (unknown !== undefined) {
-    return {
-      ok: false,
-      reason: 'usage',
-      message: `Unknown option "${unknown}". Run "repos list --help" for usage.`,
-    };
-  }
-
-  const longFlag = readFlagValue(args, '--show-commit-count');
-  const shortFlag = readFlagValue(args, '-scc');
-
-  if (longFlag.present && shortFlag.present) {
-    return {
-      ok: false,
-      reason: 'usage',
-      message:
-        'Use either --show-commit-count or -scc, not both. Run "repos list --help" for usage.',
-    };
-  }
-
-  if (!longFlag.present && !shortFlag.present) {
-    if (args.length === 0) {
-      return { ok: true, command: 'list' };
-    }
-    return {
-      ok: false,
-      reason: 'usage',
-      message: 'Unexpected arguments. Run "repos --help" for usage.',
-    };
-  }
-
-  const activeFlag = longFlag.present
-    ? { name: '--show-commit-count' as const, value: longFlag.value }
-    : { name: '-scc' as const, value: shortFlag.present ? shortFlag.value : undefined };
-
-  let days = DEFAULT_SHOW_COMMIT_COUNT_DAYS;
-  if (activeFlag.value !== undefined) {
-    const parsed = parsePositiveInt(activeFlag.value, 1);
-    if (parsed === null) {
-      return {
-        ok: false,
-        reason: 'invalid',
-        message: `${activeFlag.name} must be a positive integer.`,
-      };
-    }
-    days = parsed;
-  }
-
-  const expectedLength = activeFlag.value === undefined ? 1 : 2;
-  if (args.length !== expectedLength) {
-    return {
-      ok: false,
-      reason: 'usage',
-      message: 'Unexpected arguments. Run "repos --help" for usage.',
-    };
-  }
-
-  return {
-    ok: true,
-    command: 'list',
-    showCommitCountDays: days,
-  };
 }
 
 function parseSubmitOptions(args: readonly string[]): ParseResult {
@@ -123,7 +54,7 @@ function parseSubmitOptions(args: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: 'Unexpected arguments. Run "repos submit --help" for usage.',
+      message: 'Unexpected arguments. Run "repos --help" for usage.',
     };
   }
 
@@ -165,9 +96,6 @@ export function parseArgs(argv: readonly string[]): ParseResult {
 
   if (first !== undefined && isAction(first)) {
     if (second === undefined) {
-      if (first === 'list') {
-        return { ok: true, command: 'list' };
-      }
       if (first === 'submit') {
         return parseSubmitOptions([]);
       }
@@ -175,9 +103,6 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     }
     if (isHelpToken(second) && rest.length === 0) {
       return { ok: true, command: 'help', topic: first };
-    }
-    if (first === 'list') {
-      return parseListOptions(argv.slice(1));
     }
     if (first === 'submit') {
       return parseSubmitOptions(argv.slice(1));

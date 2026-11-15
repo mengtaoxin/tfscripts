@@ -84,26 +84,6 @@ describe('format', () => {
     ]);
   });
 
-  it('formats a list table with recent commit counts', () => {
-    const repos: RepoEntry[] = [
-      { name: 'repo-1', path: '/a' },
-      { name: 'my-long-repo', path: '/Users/me/repos/my-long-repo' },
-      { name: 'broken', path: '/missing' },
-    ];
-
-    expect(
-      formatListTable(repos, {
-        showCommitCountDays: 7,
-        commitCounts: [0, 12, null],
-      }),
-    ).toEqual([
-      'REPO          PATH                          COMMITS (7d)',
-      'repo-1        /a                            0',
-      'my-long-repo  /Users/me/repos/my-long-repo  12',
-      'broken        /missing                      -',
-    ]);
-  });
-
   it('formats a check table with dashes for zero counts', () => {
     const results: CheckOneResult[] = [
       {
@@ -140,6 +120,48 @@ describe('format', () => {
       'REPO          BRANCH     REMOTE  LOCAL AHEAD  DIRTY LINES',
       'repo-1        main       -       -            -',
       'my-long-repo  feature/x  3       1            12',
+      'repo-3        develop    ✗ failed: current branch has no upstream',
+    ]);
+  });
+
+  it('formats a check table with recent commit counts when days are set', () => {
+    const results: CheckOneResult[] = [
+      {
+        name: 'repo-1',
+        path: '/r/repo-1',
+        branch: 'main',
+        status: 'ok',
+        remoteBehind: 0,
+        localAhead: 0,
+        dirtyLines: 0,
+        commitCount: 0,
+      },
+      {
+        name: 'my-long-repo',
+        path: '/r/my-long-repo',
+        branch: 'feature/x',
+        status: 'ok',
+        remoteBehind: 3,
+        localAhead: 1,
+        dirtyLines: 12,
+        commitCount: 12,
+      },
+      {
+        name: 'repo-3',
+        path: '/r/repo-3',
+        branch: 'develop',
+        status: 'failed',
+        remoteBehind: 0,
+        localAhead: 0,
+        dirtyLines: 0,
+        reason: 'current branch has no upstream',
+      },
+    ];
+
+    expect(formatCheckTable(results, { showCommitCountDays: 7 })).toEqual([
+      'REPO          BRANCH     REMOTE  LOCAL AHEAD  DIRTY LINES  COMMITS (7d)',
+      'repo-1        main       -       -            -            0',
+      'my-long-repo  feature/x  3       1            12           12',
       'repo-3        develop    ✗ failed: current branch has no upstream',
     ]);
   });

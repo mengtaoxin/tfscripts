@@ -3,6 +3,7 @@ import { fetchWithRetry, type FetchWithRetryDeps } from './fetch-retry.js';
 import {
   countAheadUpstream,
   countBehindUpstream,
+  countCommitsSince,
   countDirtyLines,
   errorMessage,
   getBranchName,
@@ -22,12 +23,15 @@ export interface CheckOneResult {
   remoteBehind: number;
   localAhead: number;
   dirtyLines: number;
+  /** Present when `showCommitCountDays` was set on a successful check. */
+  commitCount?: number;
   reason?: string;
 }
 
 export interface CheckOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   git?: GitDeps;
   accessPath?: (path: string) => Promise<void>;
+  showCommitCountDays?: number;
 }
 
 async function ensurePathExists(
@@ -98,13 +102,15 @@ export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promi
   }
 
   try {
-    const [remoteBehind, localAhead, dirtyLines] = await Promise.all([
+    const days = deps.showCommitCountDays;
+    const [remoteBehind, localAhead, dirtyLines, commitCount] = await Promise.all([
       countBehindUpstream(git),
       countAheadUpstream(git),
       countDirtyLines(git),
+      days === undefined ? Promise.resolve(undefined) : countCommitsSince(git, days),
     ]);
 
-    return {
+    const result: CheckOneResult = {
       name: working.name,
       path: working.path,
       branch,
@@ -113,6 +119,10 @@ export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promi
       localAhead,
       dirtyLines,
     };
+    if (commitCount !== undefined) {
+      result.commitCount = commitCount;
+    }
+    return result;
   } catch (error) {
     return failResult(working, branch, errorMessage(error));
   }
