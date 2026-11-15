@@ -1,12 +1,13 @@
 import { hasUnknownFlags, parsePositiveInt, readFlagValue } from '../cli/flags.js';
 import { isHelpToken } from '../cli/help-args.js';
 
-export type RepoAction = 'update' | 'check' | 'list';
+export type RepoAction = 'update' | 'check' | 'list' | 'submit';
 
 export type ParseSuccess =
   | { ok: true; command: 'help'; topic?: RepoAction }
   | { ok: true; command: 'update' | 'check' }
-  | { ok: true; command: 'list'; showCommitCountDays?: number };
+  | { ok: true; command: 'list'; showCommitCountDays?: number }
+  | { ok: true; command: 'submit'; name: string };
 
 export type ParseFailure = {
   ok: false;
@@ -16,9 +17,10 @@ export type ParseFailure = {
 
 export type ParseResult = ParseSuccess | ParseFailure;
 
-const ACTIONS = new Set<string>(['update', 'check', 'list']);
+const ACTIONS = new Set<string>(['update', 'check', 'list', 'submit']);
 
 const LIST_KNOWN_FLAGS = new Set(['--show-commit-count', '-scc']);
+const SUBMIT_KNOWN_FLAGS = new Set(['--name']);
 const DEFAULT_SHOW_COMMIT_COUNT_DAYS = 7;
 
 function isAction(token: string): token is RepoAction {
@@ -54,7 +56,7 @@ function parseListOptions(args: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: 'Unexpected arguments. Run "repos list --help" for usage.',
+      message: 'Unexpected arguments. Run "repos --help" for usage.',
     };
   }
 
@@ -80,7 +82,7 @@ function parseListOptions(args: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: 'Unexpected arguments. Run "repos list --help" for usage.',
+      message: 'Unexpected arguments. Run "repos --help" for usage.',
     };
   }
 
@@ -88,6 +90,47 @@ function parseListOptions(args: readonly string[]): ParseResult {
     ok: true,
     command: 'list',
     showCommitCountDays: days,
+  };
+}
+
+function parseSubmitOptions(args: readonly string[]): ParseResult {
+  const unknown = hasUnknownFlags(args, SUBMIT_KNOWN_FLAGS);
+  if (unknown !== undefined) {
+    return {
+      ok: false,
+      reason: 'usage',
+      message: `Unknown option "${unknown}". Run "repos submit --help" for usage.`,
+    };
+  }
+
+  const nameFlag = readFlagValue(args, '--name');
+  if (!nameFlag.present) {
+    return {
+      ok: false,
+      reason: 'usage',
+      message: 'Missing required option --name. Run "repos submit --help" for usage.',
+    };
+  }
+  if (nameFlag.value === undefined || nameFlag.value.trim() === '') {
+    return {
+      ok: false,
+      reason: 'usage',
+      message: '--name requires a value. Run "repos submit --help" for usage.',
+    };
+  }
+
+  if (args.length !== 2) {
+    return {
+      ok: false,
+      reason: 'usage',
+      message: 'Unexpected arguments. Run "repos submit --help" for usage.',
+    };
+  }
+
+  return {
+    ok: true,
+    command: 'submit',
+    name: nameFlag.value.trim(),
   };
 }
 
@@ -125,6 +168,9 @@ export function parseArgs(argv: readonly string[]): ParseResult {
       if (first === 'list') {
         return { ok: true, command: 'list' };
       }
+      if (first === 'submit') {
+        return parseSubmitOptions([]);
+      }
       return { ok: true, command: first };
     }
     if (isHelpToken(second) && rest.length === 0) {
@@ -132,6 +178,9 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     }
     if (first === 'list') {
       return parseListOptions(argv.slice(1));
+    }
+    if (first === 'submit') {
+      return parseSubmitOptions(argv.slice(1));
     }
     return {
       ok: false,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HELP_CHECK, HELP_LIST, HELP_TEXT, HELP_UPDATE, helpTextFor } from './help.js';
+import { HELP_CHECK, HELP_LIST, HELP_SUBMIT, HELP_TEXT, HELP_UPDATE, helpTextFor } from './help.js';
 
 describe('HELP_TEXT', () => {
   it('mentions the command name, config path, and subcommands', () => {
@@ -9,9 +9,11 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('repos update');
     expect(HELP_TEXT).toContain('repos check');
     expect(HELP_TEXT).toContain('repos list');
+    expect(HELP_TEXT).toContain('repos submit');
     expect(HELP_TEXT).toContain('repos help update');
     expect(HELP_TEXT).toContain('"environment": "ssh"');
     expect(HELP_TEXT).toContain('"ssh-host": "devbox"');
+    expect(HELP_TEXT).toContain('ai-git-submit-parameters');
   });
 });
 
@@ -20,10 +22,13 @@ describe('helpTextFor', () => {
     expect(helpTextFor('update')).toBe(HELP_UPDATE);
     expect(helpTextFor('check')).toBe(HELP_CHECK);
     expect(helpTextFor('list')).toBe(HELP_LIST);
+    expect(helpTextFor('submit')).toBe(HELP_SUBMIT);
     expect(HELP_UPDATE).toContain('repos update');
     expect(HELP_CHECK).toContain('repos check');
     expect(HELP_LIST).toContain('repos list');
     expect(HELP_LIST).toContain('--show-commit-count');
     expect(HELP_LIST).toContain('-scc');
+    expect(HELP_SUBMIT).toContain('repos submit --name');
+    expect(HELP_SUBMIT).toContain('ai-git-submit');
   });
 });

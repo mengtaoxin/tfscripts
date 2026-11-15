@@ -12,10 +12,15 @@ describe('parseArgs', () => {
     expect(parseArgs(['--help'])).toEqual({ ok: true, command: 'help' });
   });
 
-  it('parses update, check, and list commands', () => {
+  it('parses update, check, list, and submit commands', () => {
     expect(parseArgs(['update'])).toEqual({ ok: true, command: 'update' });
     expect(parseArgs(['check'])).toEqual({ ok: true, command: 'check' });
     expect(parseArgs(['list'])).toEqual({ ok: true, command: 'list' });
+    expect(parseArgs(['submit', '--name', 'foo'])).toEqual({
+      ok: true,
+      command: 'submit',
+      name: 'foo',
+    });
   });
 
   it('parses leaf help via help <sub> and <sub> --help', () => {
@@ -33,6 +38,37 @@ describe('parseArgs', () => {
       ok: true,
       command: 'help',
       topic: 'list',
+    });
+    expect(parseArgs(['help', 'submit'])).toEqual({
+      ok: true,
+      command: 'help',
+      topic: 'submit',
+    });
+    expect(parseArgs(['submit', '--help'])).toEqual({
+      ok: true,
+      command: 'help',
+      topic: 'submit',
+    });
+  });
+
+  it('requires --name for submit', () => {
+    expect(parseArgs(['submit'])).toEqual({
+      ok: false,
+      reason: 'usage',
+      message: 'Missing required option --name. Run "repos submit --help" for usage.',
+    });
+    expect(parseArgs(['submit', '--name'])).toEqual({
+      ok: false,
+      reason: 'usage',
+      message: '--name requires a value. Run "repos submit --help" for usage.',
+    });
+  });
+
+  it('rejects unknown flags on submit', () => {
+    expect(parseArgs(['submit', '--name', 'foo', '--bogus'])).toEqual({
+      ok: false,
+      reason: 'usage',
+      message: 'Unknown option "--bogus". Run "repos submit --help" for usage.',
     });
   });
 

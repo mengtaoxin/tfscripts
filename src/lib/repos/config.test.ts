@@ -52,6 +52,64 @@ describe('loadSettings', () => {
     ]);
   });
 
+  it('loads optional ai-git-submit-parameters next to path', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () =>
+        JSON.stringify({
+          repos: [
+            {
+              path: '~/code/foo',
+              environment: 'ssh',
+              'ssh-host': 'devbox',
+              'ai-git-submit-parameters': ['--add yes', '--push yes'],
+            },
+            { path: '/local/app' },
+          ],
+        }),
+    });
+
+    expect(settings.repos[0]).toEqual({
+      path: '~/code/foo',
+      name: 'foo',
+      environment: 'ssh',
+      sshHost: 'devbox',
+      aiGitSubmitParameters: ['--add yes', '--push yes'],
+    });
+    expect(settings.repos[1]).toEqual({
+      path: '/local/app',
+      name: 'app',
+      environment: 'local',
+    });
+  });
+
+  it('rejects non-array ai-git-submit-parameters', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            repos: [{ path: '/abs/bar', 'ai-git-submit-parameters': '--add yes' }],
+          }),
+      }),
+    ).toThrow(/repos\[0\]\.ai-git-submit-parameters must be an array of non-empty strings/);
+  });
+
+  it('rejects empty strings in ai-git-submit-parameters', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            repos: [{ path: '/abs/bar', 'ai-git-submit-parameters': ['--add yes', '  '] }],
+          }),
+      }),
+    ).toThrow(/repos\[0\]\.ai-git-submit-parameters must be an array of non-empty strings/);
+  });
+
   it('defaults each repo environment to local', () => {
     const settings = loadSettings({
       settingsPath: '/cfg/settings.json',

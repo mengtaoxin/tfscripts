@@ -92,6 +92,26 @@ describe('ssh helpers', () => {
     expect(options.cwd).toBeUndefined();
   });
 
+  it('runs git commit over ssh with stdin for -F -', async () => {
+    const execFileWithStdin = vi.fn().mockResolvedValue(undefined);
+    const git = createSshGitDeps('devbox', { execFileWithStdin });
+
+    await git.execFileWithStdin!('git', ['commit', '-F', '-'], 'feat: hello\n', {
+      cwd: '/remote/repo',
+    });
+
+    expect(execFileWithStdin).toHaveBeenCalledWith(
+      'ssh',
+      sshInvocationArgs('devbox', ['git', '-C', '/remote/repo', 'commit', '-F', '-']),
+      'feat: hello\n',
+      expect.objectContaining({
+        env: expect.objectContaining({ SSH_ASKPASS_REQUIRE: 'never' }),
+      }),
+    );
+    const options = execFileWithStdin.mock.calls[0]?.[3] as { cwd?: string };
+    expect(options.cwd).toBeUndefined();
+  });
+
   it('maps fingerprint errors from git-over-ssh into a stable reason', async () => {
     const execFile = vi.fn().mockRejectedValue(
       Object.assign(new Error('ssh failed'), {

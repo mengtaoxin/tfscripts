@@ -13,7 +13,7 @@ export type ExecFileWithStdinFn = (
   file: string,
   args: readonly string[],
   stdin: string,
-  options?: { cwd?: string },
+  options?: { cwd?: string; env?: NodeJS.ProcessEnv },
 ) => Promise<void>;
 
 export type ReadFileFn = (path: string) => Promise<string>;
@@ -38,7 +38,7 @@ export const defaultExecFileWithStdin: ExecFileWithStdinFn = (file, args, stdin,
     const child = execFile(
       file,
       [...args],
-      { cwd: options?.cwd, maxBuffer: 10 * 1024 * 1024 },
+      { cwd: options?.cwd, maxBuffer: 10 * 1024 * 1024, env: options?.env },
       (error) => {
         if (error) {
           reject(error);

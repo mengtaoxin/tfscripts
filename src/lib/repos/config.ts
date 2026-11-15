@@ -17,6 +17,8 @@ export interface RepoEntry {
   /** Defaults to local when omitted (e.g. in tests). */
   environment?: RepoEnvironment;
   sshHost?: string;
+  /** Optional argv fragments for `repos submit` (ai-git-submit flags). */
+  aiGitSubmitParameters?: readonly string[];
 }
 
 export interface RepoSyncSettings {
@@ -73,6 +75,27 @@ function parseSshHost(
   return raw.trim();
 }
 
+function parseAiGitSubmitParameters(raw: unknown, index: number): readonly string[] | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+  if (!Array.isArray(raw)) {
+    throw new ConfigError(
+      `repos[${index}].ai-git-submit-parameters must be an array of non-empty strings.`,
+    );
+  }
+  const values: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string' || item.trim() === '') {
+      throw new ConfigError(
+        `repos[${index}].ai-git-submit-parameters must be an array of non-empty strings.`,
+      );
+    }
+    values.push(item.trim());
+  }
+  return values;
+}
+
 export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
   const home = deps.home ?? homedir();
   const readFile = deps.readFile ?? ((path) => readFileSync(path, 'utf8'));
@@ -118,6 +141,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
       path: unknown;
       environment?: unknown;
       'ssh-host'?: unknown;
+      'ai-git-submit-parameters'?: unknown;
     };
     const { path } = record;
     if (typeof path !== 'string' || path.trim() === '') {
@@ -126,6 +150,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
 
     const environment = parseEnvironment(record.environment, i);
     const sshHost = parseSshHost(record['ssh-host'], environment, i);
+    const aiGitSubmitParameters = parseAiGitSubmitParameters(record['ai-git-submit-parameters'], i);
     const trimmedPath = path.trim();
     const resolvedPath = environment === 'ssh' ? trimmedPath : expandHome(trimmedPath, home);
 
@@ -136,6 +161,9 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     };
     if (sshHost !== undefined) {
       entry.sshHost = sshHost;
+    }
+    if (aiGitSubmitParameters !== undefined) {
+      entry.aiGitSubmitParameters = aiGitSubmitParameters;
     }
     entries.push(entry);
   }

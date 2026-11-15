@@ -17,15 +17,17 @@ Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
       {
         "path": "~/repos/repo-3",
         "environment": "ssh",
-        "ssh-host": "devbox"
+        "ssh-host": "devbox",
+        "ai-git-submit-parameters": ["--add yes", "--push yes"]
       }
     ]
   }
 
 Each entry needs "path". The display name is the folder name.
 Optional per-repo fields (siblings of path):
-  environment  "local" (default) or "ssh"
-  ssh-host     Host alias from ~/.ssh/config (required when environment is ssh)
+  environment               "local" (default) or "ssh"
+  ssh-host                  Host alias from ~/.ssh/config (required when environment is ssh)
+  ai-git-submit-parameters   Argv fragments for repos submit (ai-git-submit flags)
 
 SSH mode runs git on the remote host with key-based auth only (no password
 prompts). Unknown host fingerprints are not auto-accepted; that repo fails
@@ -35,6 +37,7 @@ Commands:
   update  Fetch and merge current-branch upstream updates
   check   Fetch and show a status table (no merge)
   list    Show configured repos as a REPO / PATH table
+  submit  Run ai-git-submit for one configured repo
 
 With no arguments, repos prints this help.
 
@@ -43,6 +46,7 @@ Examples:
   repos check
   repos list
   repos list --show-commit-count
+  repos submit --name repo-3
   repos help update
 `;
 
@@ -58,7 +62,7 @@ branches). Local uncommitted or unpushed changes are kept; only true
 conflicts fail. Concurrency capped at 3; fetch network errors retry
 up to 3 times with exponential backoff.
 
-Repos may set environment/ssh-host next to path for remote repos over
+Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
 
 Reads ~/.tfscripts/repos/settings.json.
@@ -74,7 +78,7 @@ Usage:
 Fetches and shows a status table: remote-behind commits, local-ahead
 commits, and uncommitted dirty line counts. Does not merge.
 
-Repos may set environment/ssh-host next to path for remote repos over
+Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
 
 Reads ~/.tfscripts/repos/settings.json.
@@ -108,10 +112,32 @@ Examples:
   repos list -scc 14
 `;
 
+export const HELP_SUBMIT = `repos submit — run ai-git-submit for one configured repo
+
+Usage:
+  repos submit --name <repo>
+  repos help submit
+  repos submit --help
+
+Runs the ai-git-submit flow for the settings entry whose folder name
+matches --name. Always non-interactive. Optional per-repo
+ai-git-submit-parameters (argv fragments such as "--add yes") are parsed
+like ai-git-submit flags; omitted --add/--push use ai-git-submit defaults.
+
+For environment ssh, git runs on the remote host (key-based auth only);
+the LLM API uses AI_GIT_SUBMIT_* from the local process environment.
+
+Reads ~/.tfscripts/repos/settings.json.
+
+Examples:
+  repos submit --name tfscripts
+`;
+
 export const HELP_BY_TOPIC = {
   update: HELP_UPDATE,
   check: HELP_CHECK,
   list: HELP_LIST,
+  submit: HELP_SUBMIT,
 } as const;
 
 export function helpTextFor(topic: keyof typeof HELP_BY_TOPIC | undefined): string {

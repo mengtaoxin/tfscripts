@@ -1,4 +1,11 @@
-import { defaultExecFile, type ExecFileFn, type GitDeps, type ReadFileFn } from '../git/exec.js';
+import { execFile as execFileCb } from 'node:child_process';
+import {
+  defaultExecFile,
+  type ExecFileFn,
+  type ExecFileWithStdinFn,
+  type GitDeps,
+  type ReadFileFn,
+} from '../git/exec.js';
 import { errorMessage } from '../retry-policy/network-error.js';
 
 export const SSH_FINGERPRINT_REASON =
@@ -23,6 +30,7 @@ const SSH_OPTIONS = [
 
 export interface SshExecDeps {
   execFile?: ExecFileFn;
+  execFileWithStdin?: ExecFileWithStdinFn;
 }
 
 export function sshInvocationArgs(host: string, remoteArgs: readonly string[]): string[] {
@@ -81,6 +89,44 @@ async function runSsh(
   }
 }
 
+const defaultSshExecFileWithStdin: ExecFileWithStdinFn = (file, args, stdin, options) =>
+  new Promise((resolve, reject) => {
+    const child = execFileCb(
+      file,
+      [...args],
+      {
+        cwd: options?.cwd,
+        maxBuffer: 10 * 1024 * 1024,
+        env: options?.env ?? createSshExecEnv(),
+      },
+      (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      },
+    );
+    child.stdin?.write(stdin);
+    child.stdin?.end();
+  });
+
+async function runSshWithStdin(
+  host: string,
+  remoteArgs: readonly string[],
+  stdin: string,
+  deps: SshExecDeps,
+): Promise<void> {
+  const execWithStdin = deps.execFileWithStdin ?? defaultSshExecFileWithStdin;
+  try {
+    await execWithStdin('ssh', sshInvocationArgs(host, remoteArgs), stdin, {
+      env: createSshExecEnv(),
+    });
+  } catch (error) {
+    rethrowAsSshFailure(error);
+  }
+}
+
 export function expandRemoteHome(path: string, remoteHome: string): string {
   if (path === '~') {
     return remoteHome;
@@ -128,8 +174,20 @@ export function createSshGitDeps(host: string, deps: SshExecDeps = {}): GitDeps 
     return runSsh(host, ['git', '-C', remoteCwd, ...args], deps, options?.maxBuffer);
   };
 
+  const execFileWithStdin: ExecFileWithStdinFn = async (file, args, stdin, options) => {
+    if (file !== 'git') {
+      throw new Error(`SSH environment only supports git, got: ${file}`);
+    }
+    const remoteCwd = options?.cwd;
+    if (remoteCwd === undefined || remoteCwd === '') {
+      throw new Error('SSH git requires cwd (remote repo path)');
+    }
+    await runSshWithStdin(host, ['git', '-C', remoteCwd, ...args], stdin, deps);
+  };
+
   return {
     execFile,
+    execFileWithStdin,
     readFile: createSshReadFile(host, deps),
   };
 }

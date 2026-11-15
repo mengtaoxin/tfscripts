@@ -56,7 +56,10 @@ export async function resolveRepoTarget(
   const remoteHome = await remoteHomeFor(host, deps);
   const path = expandRemoteHome(entry.path, remoteHome);
   const resolvedEntry: RepoEntry = { ...entry, path };
-  const sshGit = createSshGitDeps(host, { execFile: deps.execFile ?? deps.git?.execFile });
+  const sshGit = createSshGitDeps(host, {
+    execFile: deps.execFile ?? deps.git?.execFile,
+    execFileWithStdin: deps.git?.execFileWithStdin,
+  });
 
   return {
     entry: resolvedEntry,
@@ -65,6 +68,7 @@ export async function resolveRepoTarget(
       ...deps.git,
       cwd: deps.git?.cwd ?? path,
       execFile: deps.git?.execFile ?? sshGit.execFile,
+      execFileWithStdin: deps.git?.execFileWithStdin ?? sshGit.execFileWithStdin,
       readFile: deps.git?.readFile ?? sshGit.readFile,
     },
     accessPath:

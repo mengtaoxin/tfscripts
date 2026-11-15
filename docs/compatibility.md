@@ -6,14 +6,14 @@ How to run scripts: [commands.md](commands.md). What each CLI does: [README.md](
 
 ## Summary
 
-| Script           | macOS | Linux | Windows (native) | External dependency                      |
-| ---------------- | ----- | ----- | ---------------- | ---------------------------------------- |
-| `hello`          | Yes   | Yes   | Yes\*            | None                                     |
-| `ai-git-submit`  | Yes   | Yes   | Yes\*            | `git` on `PATH`; network for the LLM API |
-| `repos`          | Yes   | Yes   | Yes\*            | `git` on `PATH`                          |
-| `open-in-vscode` | Yes   | Yes   | Yes\*            | VS Code shell command `code` on `PATH`   |
-| `retry`          | Yes   | Yes   | No               | POSIX `sh` (`spawn('sh', ['-c', …])`)    |
-| `keep-awake`     | Yes   | No    | No               | macOS `caffeinate`                       |
+| Script           | macOS | Linux | Windows (native) | External dependency                                              |
+| ---------------- | ----- | ----- | ---------------- | ---------------------------------------------------------------- |
+| `hello`          | Yes   | Yes   | Yes\*            | None                                                             |
+| `ai-git-submit`  | Yes   | Yes   | Yes\*            | `git` on `PATH`; network for the LLM API                         |
+| `repos`          | Yes   | Yes   | Yes\*            | `git` on `PATH`; `submit` also needs network + `AI_GIT_SUBMIT_*` |
+| `open-in-vscode` | Yes   | Yes   | Yes\*            | VS Code shell command `code` on `PATH`                           |
+| `retry`          | Yes   | Yes   | No               | POSIX `sh` (`spawn('sh', ['-c', …])`)                            |
+| `keep-awake`     | Yes   | No    | No               | macOS `caffeinate`                                               |
 
 \* Windows notes apply only if you invoke Node on the compiled `dist/<name>.js` (or an equivalent), with the same tools on `PATH`. Generated `bin/` wrappers and several root `package.json` scripts assume a Unix shell — see [Tooling](#tooling).
 
@@ -43,6 +43,8 @@ Calls `git` through `execFile` (`src/lib/ai-git-submit/git.ts`) and an HTTPS LLM
 ### `repos`
 
 Calls `git` through `execFile` (`src/lib/repos/git.ts`). Settings live at `~/.tfscripts/repos/settings.json`. Paths in settings may use `~`. Per-repo `environment` / `ssh-host` (siblings of `path`) can run git over `ssh` with BatchMode key-only auth; that needs an `ssh` client on `PATH` and a matching `~/.ssh/config` host. Works on any OS where Node and `git` work; SSH mode additionally needs OpenSSH-compatible `ssh`.
+
+`repos submit` reuses the ai-git-submit flow: LLM and `AI_GIT_SUBMIT_*` stay on the machine running `repos`; for `environment: "ssh"` git (including commit stdin) runs over SSH like `update` / `check`. Optional per-repo `ai-git-submit-parameters` are documented in `repos` help / `src/lib/repos/config.ts`.
 
 ### `open-in-vscode`
 
