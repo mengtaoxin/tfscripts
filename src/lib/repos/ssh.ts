@@ -33,8 +33,12 @@ export interface SshExecDeps {
   execFileWithStdin?: ExecFileWithStdinFn;
 }
 
+function shellSingleQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
 export function sshInvocationArgs(host: string, remoteArgs: readonly string[]): string[] {
-  return [...SSH_OPTIONS, host, '--', ...remoteArgs];
+  return [...SSH_OPTIONS, host, '--', ...remoteArgs.map(shellSingleQuote)];
 }
 
 export function createSshExecEnv(baseEnv: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {

@@ -27,10 +27,64 @@ describe('ssh helpers', () => {
       'NumberOfPasswordPrompts=0',
       'devbox',
       '--',
-      'git',
-      '-C',
-      '/repos/a',
-      'status',
+      "'git'",
+      "'-C'",
+      "'/repos/a'",
+      "'status'",
+    ]);
+  });
+
+  it('shell-quotes remote args so spaces and embedded quotes survive SSH join', () => {
+    expect(
+      sshInvocationArgs('devbox', [
+        'git',
+        '-C',
+        '/repos/a',
+        'rev-list',
+        '--count',
+        '--since=7 days ago',
+        'HEAD',
+      ]),
+    ).toEqual([
+      '-o',
+      'BatchMode=yes',
+      '-o',
+      'StrictHostKeyChecking=yes',
+      '-o',
+      'PasswordAuthentication=no',
+      '-o',
+      'KbdInteractiveAuthentication=no',
+      '-o',
+      'PreferredAuthentications=publickey',
+      '-o',
+      'NumberOfPasswordPrompts=0',
+      'devbox',
+      '--',
+      "'git'",
+      "'-C'",
+      "'/repos/a'",
+      "'rev-list'",
+      "'--count'",
+      "'--since=7 days ago'",
+      "'HEAD'",
+    ]);
+    expect(sshInvocationArgs('devbox', ["it's", 'ok'])).toEqual([
+      '-o',
+      'BatchMode=yes',
+      '-o',
+      'StrictHostKeyChecking=yes',
+      '-o',
+      'PasswordAuthentication=no',
+      '-o',
+      'KbdInteractiveAuthentication=no',
+      '-o',
+      'PreferredAuthentications=publickey',
+      '-o',
+      'NumberOfPasswordPrompts=0',
+      'devbox',
+      '--',
+      "'it'\\''s'",
+      "'ok'",
     ]);
   });
 

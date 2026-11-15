@@ -118,10 +118,10 @@ describe('runAfterUpdateCommands', () => {
     expect(file).toBe('ssh');
     expect(args).toContain('devbox');
     expect(args).toContain('--');
-    const shIndex = args.indexOf('sh');
-    expect(args[shIndex]).toBe('sh');
-    expect(args[shIndex + 1]).toBe('-c');
-    expect(args[shIndex + 2]).toBe("cd -- '/remote/foo' && npm install");
+    const shIndex = args.indexOf("'sh'");
+    expect(args[shIndex]).toBe("'sh'");
+    expect(args[shIndex + 1]).toBe("'-c'");
+    expect(args[shIndex + 2]).toBe("'cd -- '\\''/remote/foo'\\'' && npm install'");
     expect(options?.env).toMatchObject({
       SSH_ASKPASS_REQUIRE: 'never',
       GIT_TERMINAL_PROMPT: '0',
