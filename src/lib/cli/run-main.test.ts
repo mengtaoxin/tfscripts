@@ -58,6 +58,18 @@ describe('runCliMain', () => {
     expect(exit).toHaveBeenCalledWith(0);
   });
 
+  it('skips the run lock for __complete requests', async () => {
+    const exit = mockExit();
+    const acquireLock = vi.fn(() => ({ release: vi.fn() }));
+
+    await expect(
+      runCliMain(async () => 0, { acquireLock, argv: ['__complete', '--', 'submit'] }),
+    ).rejects.toThrow('process.exit');
+
+    expect(acquireLock).not.toHaveBeenCalled();
+    expect(exit).toHaveBeenCalledWith(0);
+  });
+
   it('prints PlatformNotSupportedError message and exits 1', async () => {
     const exit = mockExit();
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});

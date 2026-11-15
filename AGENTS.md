@@ -15,6 +15,7 @@ TypeScript CLI toolkit for everyday macOS chores. Each command is `src/<name>.ts
 | Change workflow / finish checklist           | [docs/change-code-steps.md](docs/change-code-steps.md) |
 | Layout / new commands                        | [docs/file-structure.md](docs/file-structure.md)       |
 | Setup, scripts, verify, runtime config paths | [docs/commands.md](docs/commands.md)                   |
+| Shell Tab completion                         | [docs/shell-completion.md](docs/shell-completion.md)   |
 | Tests                                        | [docs/testing.md](docs/testing.md)                     |
 | Tech stack                                   | [docs/tech-stack.md](docs/tech-stack.md)               |
 | Help / bare / flags / prompts                | [docs/cli-rules.md](docs/cli-rules.md)                 |

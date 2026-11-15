@@ -54,9 +54,13 @@ On a TTY, if required input is missing, prompt unless `--no-input` is set. Destr
 
 Prefer subcommands for distinct actions (`update` / `check` / `list`). Reuse shared flag names and `yes` / `no` boolean spellings. Global-style flags when present: `-h` / `--help`, and `--no-input` where prompts exist. Unknown commands/flags → usage error `2` with a pointer to help.
 
+## Shell completion
+
+Opt-in Tab completion uses a hidden first-token hook: `<cmd> __complete -- <words...>`. Print one candidate per line on stdout and exit `0`; on errors print nothing and still exit `0`. Do not list `__complete` in help. `runCliMain` skips the shared run lock for this token (same as help). Shared helpers: `src/lib/cli/completion.ts`. Shell setup and how to add a command: [shell-completion.md](shell-completion.md).
+
 ## Implementation
 
-Keep entries thin (`parseArgs` → dispatch → exit). Prefer `runCliMain` (`src/lib/cli/run-main.ts`). Put help in `src/lib/<name>/help.ts`, prompts in `prompts.ts` (injectable for tests — [testing.md](testing.md)). Reuse `src/lib/cli/flags.ts` and `resolveInteractiveOptions`. Lock help triggers, bare invocation, and flag↔prompt pairs in unit tests next to `parse-args` / `help`.
+Keep entries thin (`parseArgs` → dispatch → exit). Prefer `runCliMain` (`src/lib/cli/run-main.ts`). Put help in `src/lib/<name>/help.ts`, prompts in `prompts.ts` (injectable for tests — [testing.md](testing.md)). Reuse `src/lib/cli/flags.ts` and `resolveInteractiveOptions`. Lock help triggers, bare invocation, and flag↔prompt pairs in unit tests next to `parse-args` / `help`. Handle `__complete` in the entry before normal parsing when the command supports completion.
 
 ## Checklist
 

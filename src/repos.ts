@@ -1,5 +1,7 @@
+import { parseCompletionArgv, writeCompletionCandidates } from './lib/cli/completion.js';
 import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
 import { runCliMain } from './lib/cli/run-main.js';
+import { completeRepos } from './lib/repos/cli/complete.js';
 import { helpTextFor } from './lib/repos/cli/help.js';
 import { parseArgs } from './lib/repos/cli/parse-args.js';
 import { runRepoSync } from './lib/repos/orchestrate/run.js';
@@ -8,6 +10,12 @@ import { runRepoList } from './lib/repos/orchestrate/run-list.js';
 import { runRepoSubmit } from './lib/repos/orchestrate/run-submit.js';
 
 async function main(argv: readonly string[]): Promise<number> {
+  const completion = parseCompletionArgv(argv);
+  if (completion.ok) {
+    writeCompletionCandidates(completeRepos(completion.words));
+    return 0;
+  }
+
   const parsed = parseArgs(argv);
 
   if (!parsed.ok) {

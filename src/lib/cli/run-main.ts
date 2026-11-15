@@ -1,3 +1,4 @@
+import { COMPLETION_TOKEN } from './completion.js';
 import { EXIT_FAILURE } from './exit-codes.js';
 import { isHelpToken } from './help-args.js';
 import { PlatformNotSupportedError } from './platform.js';
@@ -9,6 +10,9 @@ export interface RunCliMainDeps {
 }
 
 function shouldSkipRunLock(argv: readonly string[]): boolean {
+  if (argv[0] === COMPLETION_TOKEN) {
+    return true;
+  }
   return argv.some((token) => isHelpToken(token));
 }
 

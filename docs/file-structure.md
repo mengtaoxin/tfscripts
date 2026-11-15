@@ -22,6 +22,7 @@ tfscripts/
 │       ├── retry-policy/      # shared backoff / network-error helpers
 │       └── greet.ts           # hello helper (no lib/hello/)
 ├── scripts/generate-bin.mjs   # dist/*.js → bin/<name> wrappers
+├── completions/               # bash/zsh Tab completion (see shell-completion.md)
 ├── docs/                      # agent / contributor workflow docs
 └── .agents/skills/            # installed agent skills
 ```

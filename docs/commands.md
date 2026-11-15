@@ -13,6 +13,8 @@ npm run build
 
 `build` runs `tsc`, then `scripts/generate-bin.mjs`, which writes executable `bin/<name>` wrappers for each top-level `dist/<name>.js`. `dist/` and `bin/` are gitignored. Add `bin/` to `PATH`, or run `./bin/<name>`.
 
+Shell Tab completion (bash/zsh): [shell-completion.md](shell-completion.md).
+
 ## Common scripts
 
 | Script                | Purpose                                            |
