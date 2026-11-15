@@ -16,8 +16,8 @@ const sample: KeepAwakeState = {
 };
 
 describe('defaultStatePath', () => {
-  it('resolves under ~/.tfscripts/keep-awake/keep-awake.json', () => {
-    expect(defaultStatePath('/Users/me')).toBe('/Users/me/.tfscripts/keep-awake/keep-awake.json');
+  it('resolves under ~/.tfscripts/keep-awake/status.json', () => {
+    expect(defaultStatePath('/Users/me')).toBe('/Users/me/.tfscripts/keep-awake/status.json');
   });
 });
 
@@ -30,7 +30,7 @@ describe('readActiveKeepAwakeState', () => {
 
     expect(
       readActiveKeepAwakeState({
-        statePath: '/tmp/keep-awake.json',
+        statePath: '/tmp/status.json',
         readFile,
         isAlive,
       }),
@@ -45,13 +45,13 @@ describe('readActiveKeepAwakeState', () => {
 
     expect(
       readActiveKeepAwakeState({
-        statePath: '/tmp/keep-awake.json',
+        statePath: '/tmp/status.json',
         readFile,
         isAlive,
         removeFile,
       }),
     ).toBeNull();
-    expect(removeFile).toHaveBeenCalledWith('/tmp/keep-awake.json');
+    expect(removeFile).toHaveBeenCalledWith('/tmp/status.json');
   });
 
   it('returns state when the process is alive', () => {
@@ -60,7 +60,7 @@ describe('readActiveKeepAwakeState', () => {
 
     expect(
       readActiveKeepAwakeState({
-        statePath: '/tmp/keep-awake.json',
+        statePath: '/tmp/status.json',
         readFile,
         isAlive,
       }),
@@ -75,7 +75,7 @@ describe('writeKeepAwakeState / clearKeepAwakeState', () => {
     const removeFile = vi.fn();
 
     writeKeepAwakeState({
-      statePath: '/tmp/dir/keep-awake.json',
+      statePath: '/tmp/dir/status.json',
       state: sample,
       mkdir,
       writeFile,
@@ -83,12 +83,12 @@ describe('writeKeepAwakeState / clearKeepAwakeState', () => {
 
     expect(mkdir).toHaveBeenCalledWith('/tmp/dir', { recursive: true });
     expect(writeFile).toHaveBeenCalledWith(
-      '/tmp/dir/keep-awake.json',
+      '/tmp/dir/status.json',
       `${JSON.stringify(sample, null, 2)}\n`,
       'utf8',
     );
 
-    clearKeepAwakeState({ statePath: '/tmp/dir/keep-awake.json', removeFile });
-    expect(removeFile).toHaveBeenCalledWith('/tmp/dir/keep-awake.json');
+    clearKeepAwakeState({ statePath: '/tmp/dir/status.json', removeFile });
+    expect(removeFile).toHaveBeenCalledWith('/tmp/dir/status.json');
   });
 });

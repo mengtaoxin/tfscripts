@@ -11,7 +11,7 @@ export interface KeepAwakeState {
 }
 
 export function defaultStatePath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'keep-awake', 'keep-awake.json');
+  return join(home, '.tfscripts', 'keep-awake', 'status.json');
 }
 
 function isProcessAlive(pid: number): boolean {
