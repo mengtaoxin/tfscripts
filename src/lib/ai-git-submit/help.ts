@@ -9,6 +9,9 @@ Options:
   --push <yes|no>  Run "git push" after a successful commit (default: no)
   --no-input       Never prompt; omitted flags use their defaults
 
+Must be run inside a git repository (or a subdirectory of one). Exits with an
+error before prompting if the current directory is not in a git work tree.
+
 Partial flags → prompt for the rest on a TTY. With no arguments, ai-git-submit
 prompts for --add and --push. Non-TTY or --no-input never prompts; omitted
 flags use defaults (no for both).

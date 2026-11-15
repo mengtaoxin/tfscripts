@@ -8,6 +8,7 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('--push');
     expect(HELP_TEXT).toContain('--no-input');
     expect(HELP_TEXT).toContain('Partial flags');
+    expect(HELP_TEXT).toContain('git repository');
     expect(HELP_TEXT).toContain('AI_GIT_SUBMIT_');
   });
 });

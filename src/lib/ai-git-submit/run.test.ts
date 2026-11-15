@@ -41,6 +41,26 @@ function createGitMock(options?: { stagedDiff?: string }) {
 }
 
 describe('runSubmit', () => {
+  it('fails when not inside a git repository', async () => {
+    const execFile = vi.fn().mockRejectedValue(new Error('fatal: not a git repository'));
+    const error = vi.fn();
+
+    const result = await runSubmit(
+      { add: false, push: false },
+      {
+        git: { execFile },
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: vi.fn(),
+        log: vi.fn(),
+        error,
+        sleep: vi.fn(),
+      },
+    );
+
+    expect(result.exitCode).toBe(1);
+    expect(error).toHaveBeenCalledWith('Not a git repository (or any of the parent directories).');
+  });
+
   it('fails when there are no staged changes', async () => {
     const git = createGitMock({ stagedDiff: '' });
     const error = vi.fn();
