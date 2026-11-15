@@ -1,24 +1,49 @@
 import { EXIT_FAILURE } from './exit-codes.js';
+import { isHelpToken } from './help-args.js';
 import { PlatformNotSupportedError } from './platform.js';
-import { RunLockError } from './run-lock.js';
+import { acquireRunLock, RunLockError, type RunLockHandle } from './run-lock.js';
+
+export interface RunCliMainDeps {
+  acquireLock?: () => RunLockHandle;
+  argv?: readonly string[];
+}
+
+function shouldSkipRunLock(argv: readonly string[]): boolean {
+  return argv.some((token) => isHelpToken(token));
+}
 
 /**
- * Run a CLI `main` and map cancel / platform-not-supported / run-lock to exit 1.
- * Other errors rethrow.
+ * Run a CLI `main` under the shared tfscripts run lock, and map cancel /
+ * platform-not-supported / run-lock to exit 1. Other errors rethrow.
+ * Help requests (`help` / `-h` / `--help`) skip the lock.
  */
-export async function runCliMain(main: () => Promise<number>): Promise<never> {
+export async function runCliMain(
+  main: () => Promise<number>,
+  deps: RunCliMainDeps = {},
+): Promise<never> {
+  const argv = deps.argv ?? process.argv.slice(2);
+  const acquireLock = deps.acquireLock ?? acquireRunLock;
+  let lock: RunLockHandle | undefined;
+  let exitCode = EXIT_FAILURE;
+
   try {
-    const exitCode = await main();
-    process.exit(exitCode);
+    if (!shouldSkipRunLock(argv)) {
+      lock = acquireLock();
+    }
+    exitCode = await main();
   } catch (error) {
     if (error instanceof Error && error.name === 'ExitPromptError') {
       console.error('Cancelled.');
-      process.exit(1);
-    }
-    if (error instanceof PlatformNotSupportedError || error instanceof RunLockError) {
+      exitCode = 1;
+    } else if (error instanceof PlatformNotSupportedError || error instanceof RunLockError) {
       console.error(error.message);
-      process.exit(EXIT_FAILURE);
+      exitCode = EXIT_FAILURE;
+    } else {
+      throw error;
     }
-    throw error;
+  } finally {
+    lock?.release();
   }
+
+  process.exit(exitCode);
 }
