@@ -1,5 +1,5 @@
-import { withExponentialBackoff } from '../retry-policy/backoff.js';
-import { isNetworkError } from '../retry-policy/network-error.js';
+import { withExponentialBackoff } from '../../retry-policy/backoff.js';
+import { isNetworkError } from '../../retry-policy/network-error.js';
 import { fetchUpstream, type GitDeps } from './git.js';
 
 export interface FetchWithRetryDeps {

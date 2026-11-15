@@ -1,6 +1,6 @@
 import { access } from 'node:fs/promises';
 import type { RepoEntry } from './config.js';
-import type { ExecFileFn, GitDeps } from '../git/exec.js';
+import type { ExecFileFn, GitDeps } from '../../git/exec.js';
 import {
   createSshAccessPath,
   createSshGitDeps,

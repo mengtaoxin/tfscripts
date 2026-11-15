@@ -30,11 +30,11 @@ On usage errors, print a short message plus a usage summary or `Run "<cmd> --hel
 
 Choose one documented default per command and state it in help.
 
-| Command shape                                          | Bare `<cmd>`                                      |
-| ------------------------------------------------------ | ------------------------------------------------- |
-| Several subcommands, no single primary action          | Print root help (exit `0`) — e.g. `repos`         |
+| Command shape                                          | Bare `<cmd>`                                                    |
+| ------------------------------------------------------ | --------------------------------------------------------------- |
+| Several subcommands, no single primary action          | Print root help (exit `0`) — e.g. `repos`                       |
 | One primary action, interactive-friendly               | Start that action — e.g. `retry`, `keep-awake`, `ai-git-submit` |
-| Primary action needs args; no side effect without them | Concise help (exit `0`) — e.g. `open-in-vscode`   |
+| Primary action needs args; no side effect without them | Concise help (exit `0`) — e.g. `open-in-vscode`                 |
 
 If there is a default action, say so under `Commands:` / `Usage:` in help.
 

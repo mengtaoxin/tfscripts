@@ -5,8 +5,8 @@ import {
   shortErrorMessage,
   type AfterUpdateDeps,
 } from './after-update.js';
-import type { RepoEntry } from './config.js';
-import type { ExecFileFn } from '../git/exec.js';
+import type { RepoEntry } from '../infra/config.js';
+import type { ExecFileFn } from '../../git/exec.js';
 
 function localEntry(overrides: Partial<RepoEntry> = {}): RepoEntry {
   return {

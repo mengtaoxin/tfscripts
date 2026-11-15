@@ -1,5 +1,5 @@
-import { hasUnknownFlags, readFlagValue } from '../cli/flags.js';
-import { isHelpToken } from '../cli/help-args.js';
+import { hasUnknownFlags, readFlagValue } from '../../cli/flags.js';
+import { isHelpToken } from '../../cli/help-args.js';
 
 export type RepoAction = 'update' | 'check' | 'list' | 'submit';
 

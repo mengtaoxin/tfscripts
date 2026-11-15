@@ -5,8 +5,8 @@ import {
   type ExecFileWithStdinFn,
   type GitDeps,
   type ReadFileFn,
-} from '../git/exec.js';
-import { errorMessage } from '../retry-policy/network-error.js';
+} from '../../git/exec.js';
+import { errorMessage } from '../../retry-policy/network-error.js';
 
 export const SSH_FINGERPRINT_REASON =
   'SSH host fingerprint verification failed (host key not trusted; not auto-accepted)';

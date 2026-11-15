@@ -45,7 +45,15 @@ describe('parseSubmitParameters', () => {
   it('rejects invalid ai-git-submit flags', () => {
     expect(parseSubmitParameters(['--bogus'])).toEqual({
       ok: false,
-      message: 'Unknown option "--bogus". Run "ai-git-submit help" for usage.',
+      message: 'Unknown option "--bogus". Run "repos submit --help" for usage.',
+    });
+  });
+
+  it('rejects help tokens in parameters', () => {
+    expect(parseSubmitParameters(['help'])).toEqual({
+      ok: false,
+      message:
+        'ai-git-submit-parameters must be ai-git-submit flags, not help. Run "repos submit --help" for usage.',
     });
   });
 });

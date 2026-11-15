@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runRepoCheck } from './run-check.js';
-import type { CheckOneResult } from './check-one.js';
+import type { CheckOneResult } from '../ops/check-one.js';
 
 describe('runRepoCheck', () => {
   it('rewrites progress in place, then prints ordered check rows', async () => {

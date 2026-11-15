@@ -1,5 +1,5 @@
-import { hasUnknownFlags, parseYesNoFlag } from '../cli/flags.js';
 import { isHelpToken } from '../cli/help-args.js';
+import { parseSubmitFlags } from '../submit-options/flags.js';
 
 export type ParseSuccess =
   | { ok: true; command: 'help' }
@@ -20,8 +20,7 @@ export type ParseFailure = {
 
 export type ParseResult = ParseSuccess | ParseFailure;
 
-const KNOWN_FLAGS = new Set(['--add', '--push', '--protect-main', '--no-input']);
-const VALUELESS_FLAGS = new Set(['--no-input']);
+const USAGE_HINT = 'ai-git-submit help';
 
 export function parseArgs(argv: readonly string[]): ParseResult {
   if (argv.length === 0) {
@@ -45,38 +44,21 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     return {
       ok: false,
       reason: 'usage',
-      message: `Unknown command "${first}". Run "ai-git-submit help" for usage.`,
+      message: `Unknown command "${first}". Run "${USAGE_HINT}" for usage.`,
     };
   }
 
-  const unknown = hasUnknownFlags(argv, KNOWN_FLAGS, { valueless: VALUELESS_FLAGS });
-  if (unknown !== undefined) {
-    return {
-      ok: false,
-      reason: 'usage',
-      message: `Unknown option "${unknown}". Run "ai-git-submit help" for usage.`,
-    };
-  }
-
-  const add = parseYesNoFlag(argv, '--add');
-  if (!add.ok) {
-    return { ok: false, reason: 'invalid', message: add.message };
-  }
-  const push = parseYesNoFlag(argv, '--push');
-  if (!push.ok) {
-    return { ok: false, reason: 'invalid', message: push.message };
-  }
-  const protectMain = parseYesNoFlag(argv, '--protect-main');
-  if (!protectMain.ok) {
-    return { ok: false, reason: 'invalid', message: protectMain.message };
+  const parsed = parseSubmitFlags(argv, { usageHint: USAGE_HINT });
+  if (!parsed.ok) {
+    return parsed;
   }
 
   return {
     ok: true,
     command: 'submit',
-    noInput: argv.includes('--no-input'),
-    add: add.value,
-    push: push.value,
-    protectMain: protectMain.value,
+    noInput: parsed.noInput,
+    add: parsed.add,
+    push: parsed.push,
+    protectMain: parsed.protectMain,
   };
 }

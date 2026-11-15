@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { REMOTE_OPERATION_THROTTLED_REASON } from './remote-operation-throttle.js';
-import type { ReposState } from './state.js';
+import { REMOTE_OPERATION_THROTTLED_REASON } from '../infra/remote-operation-throttle.js';
+import type { ReposState } from '../infra/state.js';
 import { syncOne } from './sync-one.js';
-import type { ExecFileFn } from './git.js';
+import type { ExecFileFn } from '../infra/git.js';
 
 function createExecFile(handler: (joined: string) => { stdout: string; stderr: string } | void) {
   const execFile: ExecFileFn = vi.fn(async (_file, args) => {
@@ -245,7 +245,7 @@ describe('syncOne', () => {
   });
 
   it('reports SSH fingerprint failures as a per-repo failed row reason', async () => {
-    const { SSH_FINGERPRINT_REASON } = await import('./ssh.js');
+    const { SSH_FINGERPRINT_REASON } = await import('../infra/ssh.js');
     const result = await syncOne(
       {
         name: 'remote-repo',

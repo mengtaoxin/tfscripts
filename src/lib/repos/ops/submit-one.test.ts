@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { submitOne } from './submit-one.js';
-import type { RepoEntry } from './config.js';
+import type { RepoEntry } from '../infra/config.js';
 
 describe('submitOne', () => {
   it('runs executeSubmit with local cwd and parsed parameters', async () => {
@@ -79,7 +79,7 @@ describe('submitOne', () => {
     expect(exitCode).toBe(2);
     expect(executeSubmitFn).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledWith(
-      'Unknown option "--bogus". Run "ai-git-submit help" for usage.',
+      'Unknown option "--bogus". Run "repos submit --help" for usage.',
     );
   });
 

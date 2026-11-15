@@ -1,9 +1,9 @@
-import { EXIT_USAGE } from '../cli/exit-codes.js';
-import { executeSubmit, type ExecuteSubmitDeps } from '../ai-git-submit/execute.js';
-import type { RepoEntry } from './config.js';
-import { errorMessage } from './git.js';
-import { parseSubmitParameters } from './parse-submit-parameters.js';
-import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
+import { EXIT_USAGE } from '../../cli/exit-codes.js';
+import { executeSubmit, type ExecuteSubmitDeps } from '../../ai-git-submit/execute.js';
+import type { RepoEntry } from '../infra/config.js';
+import { errorMessage } from '../infra/git.js';
+import { parseSubmitParameters } from '../cli/parse-submit-parameters.js';
+import { resolveRepoTarget, type ResolveRepoTargetDeps } from '../infra/repo-target.js';
 
 export interface SubmitOneDeps extends ResolveRepoTargetDeps {
   executeSubmitFn?: (

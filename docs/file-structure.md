@@ -11,6 +11,12 @@ tfscripts/
 │   ├── hello.test.ts          # exception: hello tests sit next to the entry
 │   └── lib/
 │       ├── <name>/            # logic for that command
+│       ├── repos/             # repos command (split by layer)
+│       │   ├── cli/           # parse-args, help, submit-parameter parse
+│       │   ├── orchestrate/   # batch runners, format, update/check/list/submit
+│       │   ├── ops/           # per-repo sync/check/submit/after-update
+│       │   └── infra/         # config, git/ssh, pool, progress, state, throttle
+│       ├── submit-options/    # shared --add/--push/--protect-main flag contract
 │       ├── cli/               # shared CLI helpers
 │       ├── git/               # shared git process helpers
 │       ├── retry-policy/      # shared backoff / network-error helpers

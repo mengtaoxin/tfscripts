@@ -1,4 +1,4 @@
-import { defaultSettingsPath, loadSettings, type RepoSyncSettings } from './config.js';
+import { defaultSettingsPath, loadSettings, type RepoSyncSettings } from '../infra/config.js';
 import { formatListTable } from './format.js';
 
 export interface RunRepoListDeps {

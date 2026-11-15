@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { resolveRepoTarget } from './repo-target.js';
 import { sshInvocationArgs } from './ssh.js';
-import type { ExecFileFn } from '../git/exec.js';
+import type { ExecFileFn } from '../../git/exec.js';
 
 describe('resolveRepoTarget', () => {
   it('keeps local repos on the local filesystem', async () => {

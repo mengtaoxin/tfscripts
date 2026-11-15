@@ -1,12 +1,12 @@
 import { readFile as readFileFs } from 'node:fs/promises';
 import { join } from 'node:path';
-import { getBranchName } from '../git/branch.js';
-import { isConflictError } from '../git/errors.js';
-import { execGit, withGitDefaults, type ExecFileFn, type GitDeps } from '../git/exec.js';
+import { getBranchName } from '../../git/branch.js';
+import { isConflictError } from '../../git/errors.js';
+import { execGit, withGitDefaults, type ExecFileFn, type GitDeps } from '../../git/exec.js';
 
 export type { ExecFileFn, GitDeps };
 export { getBranchName };
-export { errorMessage, isNetworkError } from '../retry-policy/network-error.js';
+export { errorMessage, isNetworkError } from '../../retry-policy/network-error.js';
 export { isConflictError };
 
 export async function getUpstreamRef(deps: GitDeps): Promise<string> {

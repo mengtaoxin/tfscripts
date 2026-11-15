@@ -7,9 +7,9 @@ import {
   formatSummary,
   statusLabel,
 } from './format.js';
-import type { CheckOneResult } from './check-one.js';
-import type { SyncOneResult } from './sync-one.js';
-import type { RepoEntry } from './config.js';
+import type { CheckOneResult } from '../ops/check-one.js';
+import type { SyncOneResult } from '../ops/sync-one.js';
+import type { RepoEntry } from '../infra/config.js';
 
 describe('format', () => {
   it('maps statuses to English labels with markers', () => {

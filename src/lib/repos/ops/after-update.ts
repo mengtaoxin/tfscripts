@@ -2,9 +2,9 @@ import { randomBytes as defaultRandomBytes } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { tmpdir as osTmpdir } from 'node:os';
 import { join } from 'node:path';
-import { defaultExecFile, type ExecFileFn } from '../git/exec.js';
-import type { RepoEntry } from './config.js';
-import { createSshExecEnv, sshInvocationArgs } from './ssh.js';
+import { defaultExecFile, type ExecFileFn } from '../../git/exec.js';
+import type { RepoEntry } from '../infra/config.js';
+import { createSshExecEnv, sshInvocationArgs } from '../infra/ssh.js';
 
 const ALPHANUMERIC = 'abcdefghijklmnopqrstuvwxyz0123456789';
 

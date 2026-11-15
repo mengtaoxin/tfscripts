@@ -1,38 +1,39 @@
-import type { AfterUpdateOutcome } from './after-update.js';
-import type { RepoEntry } from './config.js';
-import { fetchWithRetry, type FetchWithRetryDeps } from './fetch-retry.js';
+import type { RepoEntry } from '../infra/config.js';
+import { fetchWithRetry, type FetchWithRetryDeps } from '../infra/fetch-retry.js';
 import {
+  countAheadUpstream,
   countBehindUpstream,
+  countCommitsSince,
+  countDirtyLines,
   errorMessage,
   getBranchName,
   getUpstreamRef,
-  isConflictError,
   isNetworkError,
-  isWorkingTreeDirty,
-  mergeAbort,
-  mergeUpstream,
-  stashPop,
-  stashPush,
   type GitDeps,
-} from './git.js';
-import { tryBeginRemoteOperation } from './remote-operation-throttle.js';
-import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
-import { defaultStatePath, repoStateKey } from './state.js';
+} from '../infra/git.js';
+import { tryBeginRemoteOperation } from '../infra/remote-operation-throttle.js';
+import { resolveRepoTarget, type ResolveRepoTargetDeps } from '../infra/repo-target.js';
+import { defaultStatePath, repoStateKey } from '../infra/state.js';
 
-export type SyncStatus = 'up-to-date' | 'updated' | 'failed';
+export type CheckStatus = 'ok' | 'failed';
 
-export interface SyncOneResult {
+export interface CheckOneResult {
   name: string;
   path: string;
   branch: string;
-  status: SyncStatus;
+  status: CheckStatus;
+  remoteBehind: number;
+  localAhead: number;
+  dirtyLines: number;
+  /** Present when `showCommitCountDays` was set on a successful check. */
+  commitCount?: number;
   reason?: string;
-  afterUpdate?: AfterUpdateOutcome;
 }
 
-export interface SyncOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
+export interface CheckOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   git?: GitDeps;
   accessPath?: (path: string) => Promise<void>;
+  showCommitCountDays?: number;
   /** When set, enforces per-repo remote-operation throttling before any remote work. */
   remoteOperationThrottlingSeconds?: number;
   statePath?: string;
@@ -41,8 +42,6 @@ export interface SyncOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   writeStateFile?: (path: string, data: string, encoding: 'utf8') => void;
   mkdirState?: (path: string, options: { recursive: boolean }) => void;
 }
-
-const STASH_MESSAGE = 'repos autostash';
 
 async function ensurePathExists(
   path: string,
@@ -55,17 +54,20 @@ async function ensurePathExists(
   }
 }
 
-function failResult(entry: RepoEntry, branch: string, reason: string): SyncOneResult {
+function failResult(entry: RepoEntry, branch: string, reason: string): CheckOneResult {
   return {
     name: entry.name,
     path: entry.path,
     branch,
     status: 'failed',
+    remoteBehind: 0,
+    localAhead: 0,
+    dirtyLines: 0,
     reason,
   };
 }
 
-export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise<SyncOneResult> {
+export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promise<CheckOneResult> {
   let branch = '';
   let working = entry;
   let git: GitDeps;
@@ -123,72 +125,28 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
     );
   }
 
-  let behind: number;
   try {
-    behind = await countBehindUpstream(git);
-  } catch (error) {
-    return failResult(working, branch, errorMessage(error));
-  }
+    const days = deps.showCommitCountDays;
+    const [remoteBehind, localAhead, dirtyLines, commitCount] = await Promise.all([
+      countBehindUpstream(git),
+      countAheadUpstream(git),
+      countDirtyLines(git),
+      days === undefined ? Promise.resolve(undefined) : countCommitsSince(git, days),
+    ]);
 
-  if (behind === 0) {
-    return {
+    const result: CheckOneResult = {
       name: working.name,
       path: working.path,
       branch,
-      status: 'up-to-date',
+      status: 'ok',
+      remoteBehind,
+      localAhead,
+      dirtyLines,
     };
-  }
-
-  let stashed = false;
-  try {
-    const dirty = await isWorkingTreeDirty(git);
-    if (dirty) {
-      await stashPush(git, STASH_MESSAGE);
-      stashed = true;
+    if (commitCount !== undefined) {
+      result.commitCount = commitCount;
     }
-
-    try {
-      await mergeUpstream(git);
-    } catch (error) {
-      if (isConflictError(error)) {
-        try {
-          await mergeAbort(git);
-        } catch {
-          // ignore abort failures; still report conflict
-        }
-        if (stashed) {
-          try {
-            await stashPop(git);
-          } catch {
-            // leave stash if pop fails after abort
-          }
-        }
-        return failResult(working, branch, 'local and remote conflict');
-      }
-      throw error;
-    }
-
-    if (stashed) {
-      try {
-        await stashPop(git);
-      } catch (error) {
-        if (isConflictError(error)) {
-          return failResult(working, branch, 'local and remote conflict');
-        }
-        return failResult(
-          working,
-          branch,
-          `failed to restore local changes: ${errorMessage(error)}`,
-        );
-      }
-    }
-
-    return {
-      name: working.name,
-      path: working.path,
-      branch,
-      status: 'updated',
-    };
+    return result;
   } catch (error) {
     return failResult(working, branch, errorMessage(error));
   }

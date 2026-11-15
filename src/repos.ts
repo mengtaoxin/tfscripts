@@ -1,11 +1,11 @@
 import { exitCodeForParseFailure } from './lib/cli/exit-codes.js';
 import { runCliMain } from './lib/cli/run-main.js';
-import { helpTextFor } from './lib/repos/help.js';
-import { parseArgs } from './lib/repos/parse-args.js';
-import { runRepoSync } from './lib/repos/run.js';
-import { runRepoCheck } from './lib/repos/run-check.js';
-import { runRepoList } from './lib/repos/run-list.js';
-import { runRepoSubmit } from './lib/repos/run-submit.js';
+import { helpTextFor } from './lib/repos/cli/help.js';
+import { parseArgs } from './lib/repos/cli/parse-args.js';
+import { runRepoSync } from './lib/repos/orchestrate/run.js';
+import { runRepoCheck } from './lib/repos/orchestrate/run-check.js';
+import { runRepoList } from './lib/repos/orchestrate/run-list.js';
+import { runRepoSubmit } from './lib/repos/orchestrate/run-submit.js';
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);

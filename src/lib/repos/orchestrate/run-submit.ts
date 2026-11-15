@@ -3,8 +3,8 @@ import {
   loadSettings,
   type RepoEntry,
   type RepoSyncSettings,
-} from './config.js';
-import { submitOne, type SubmitOneDeps } from './submit-one.js';
+} from '../infra/config.js';
+import { submitOne, type SubmitOneDeps } from '../ops/submit-one.js';
 
 export interface RunRepoSubmitOptions {
   name: string;

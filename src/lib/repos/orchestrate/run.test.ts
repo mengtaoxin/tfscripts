@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runRepoSync } from './run.js';
-import type { SyncOneResult } from './sync-one.js';
+import type { SyncOneResult } from '../ops/sync-one.js';
 
 describe('runRepoSync', () => {
   it('rewrites progress in place, then prints ordered results and summary', async () => {
@@ -92,7 +92,7 @@ describe('runRepoSync', () => {
 
   it('keeps processing other repos when one SSH repo fails', async () => {
     const lines: string[] = [];
-    const { SSH_FINGERPRINT_REASON } = await import('./ssh.js');
+    const { SSH_FINGERPRINT_REASON } = await import('../infra/ssh.js');
 
     const exit = await runRepoSync({
       loadSettings: () => ({

@@ -1,6 +1,6 @@
-import type { CheckOneResult } from './check-one.js';
-import type { RepoEntry } from './config.js';
-import type { SyncOneResult, SyncStatus } from './sync-one.js';
+import type { CheckOneResult } from '../ops/check-one.js';
+import type { RepoEntry } from '../infra/config.js';
+import type { SyncOneResult, SyncStatus } from '../ops/sync-one.js';
 
 const HEADER_REPO = 'REPO';
 const HEADER_PATH = 'PATH';

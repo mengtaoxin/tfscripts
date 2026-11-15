@@ -8,7 +8,7 @@ import {
   resolveRemoteHome,
   sshInvocationArgs,
 } from './ssh.js';
-import type { ExecFileFn } from '../git/exec.js';
+import type { ExecFileFn } from '../../git/exec.js';
 
 describe('ssh helpers', () => {
   it('builds BatchMode key-only ssh args without accepting new host keys', () => {
