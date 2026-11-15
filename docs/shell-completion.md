@@ -21,7 +21,14 @@ Add that line to `~/.bashrc` (or equivalent) to keep it across sessions.
 source /path/to/tfscripts/completions/tfscripts.zsh
 ```
 
-Add that line to `~/.zshrc`. Ensure `compinit` has run (Oh My Zsh and most configs already do).
+Add that line to `~/.zshrc` **after** any `compinit` (Oh My Zsh and most configs already run it). If you `source` the file in a shell where compsys is not loaded yet, the script runs `compinit` itself so `compdef` exists.
+
+Quick check that registration stuck:
+
+```sh
+print -r -- ${_comps[repos]}
+# expect: _tfscripts_complete
+```
 
 ## What works today
 
