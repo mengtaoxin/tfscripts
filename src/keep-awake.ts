@@ -1,4 +1,5 @@
 import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { assertSupportedPlatform } from './lib/cli/platform.js';
 import { resolveInteractiveOptions } from './lib/cli/resolve-options.js';
 import { runCliMain } from './lib/cli/run-main.js';
 import {
@@ -44,6 +45,8 @@ async function main(argv: readonly string[]): Promise<number> {
     console.log(helpTextFor(parsed.topic).trimEnd());
     return 0;
   }
+
+  assertSupportedPlatform({ command: 'keep-awake', supported: ['darwin'] });
 
   if (parsed.command === 'status') {
     const state = readActiveKeepAwakeState({ statePath });

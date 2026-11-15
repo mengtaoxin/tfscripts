@@ -52,15 +52,15 @@ Spawns the `code` CLI (`src/lib/open-in-vscode/run.ts`). Optional aliases: `~/.t
 
 ### `retry`
 
-Runs the user command as `sh -c '<command>'` (`src/lib/retry/run.ts`). That requires a POSIX `sh` (macOS and typical Linux). Native Windows (cmd/PowerShell without `sh`) is not supported. WSL or another environment that provides `sh` can run it.
+Runs the user command as `sh -c '<command>'` (`src/lib/retry/run.ts`). That requires a POSIX `sh` (macOS and typical Linux). Native Windows is rejected up front with `PlatformNotSupportedError` (`src/lib/cli/platform.ts`); help still works. WSL counts as Linux.
 
 ### `keep-awake`
 
-Starts a detached `caffeinate` process (`src/lib/keep-awake/session.ts`) and stores session state under `~/.tfscripts/keep-awake/`. `caffeinate` exists only on macOS. Linux and Windows have no equivalent in this script; it will fail when `caffeinate` is not found.
+Starts a detached `caffeinate` process (`src/lib/keep-awake/session.ts`) and stores session state under `~/.tfscripts/keep-awake/`. `caffeinate` exists only on macOS. Linux and Windows are rejected up front with `PlatformNotSupportedError` for all non-help commands (`status` / `stop` / `start`); help still works.
 
 ## Practical guidance
 
 1. **Day-to-day use:** treat the suite as a macOS toolkit; that matches [README.md](../README.md).
 2. **Cross-OS helpers:** `hello`, `ai-git-submit`, `repos`, and `open-in-vscode` are the ones most likely to work on Linux (and on Windows via Node + tools, without relying on `bin/`).
-3. **Do not expect** `keep-awake` off macOS, or `retry` without `sh`.
+3. **Do not expect** `keep-awake` off macOS, or `retry` on native Windows — both fail fast with a not-supported error before prompts or spawn.
 4. Prefer documenting a future port in this file when behavior changes; do not infer support from a green `npm test` alone.
