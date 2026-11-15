@@ -1,0 +1,11 @@
+# Local env files — secrets the agent must not read
+.env
+.env.*
+!.env.example
+
+# Certificates and private keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx

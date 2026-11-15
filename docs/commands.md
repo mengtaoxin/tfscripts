@@ -1,54 +1,46 @@
 # Commands
 
-Run from the repo root. Script names are the `scripts` field in `package.json`. What each CLI does: [README.md](../README.md).
+Run from the repo root. Script names live in `package.json` `scripts`. Stack: [tech-stack.md](tech-stack.md).
 
 ## Setup
 
-Node.js 22+. `@mengtaoxin/oxc-config` is on GitHub Packages. Export `NODE_AUTH_TOKEN` (a PAT with `read:packages`) before install so [`.npmrc`](../.npmrc) can authenticate.
+Node.js 22+. `@mengtaoxin/oxc-config` is on GitHub Packages — export `NODE_AUTH_TOKEN` (PAT with `read:packages`) before install so [`.npmrc`](../.npmrc) can authenticate.
 
 ```sh
 npm install
 npm run build
 ```
 
-`npm run build` runs `tsc`, then `scripts/generate-bin.mjs`, which writes an executable `bin/<name>` wrapper for each top-level `dist/<name>.js`. `dist/` and `bin/` are gitignored.
+`build` runs `tsc`, then `scripts/generate-bin.mjs`, which writes executable `bin/<name>` wrappers for each top-level `dist/<name>.js`. `dist/` and `bin/` are gitignored. Add `bin/` to `PATH`, or run `./bin/<name>`.
 
-Add `bin/` to `PATH`, or run `./bin/<name>`.
+## Common scripts
 
-## Verify
+| Script         | Purpose                                          |
+| -------------- | ------------------------------------------------ |
+| `build`        | Compile and generate `bin/`                      |
+| `clean`        | Remove `dist/` and `bin/`                        |
+| `format`       | Write formatting (`oxfmt`)                       |
+| `format:check` | Check formatting only                            |
+| `lint`         | oxlint                                           |
+| `lint:fix`     | oxlint with autofixes                            |
+| `type-check`   | `tsc --noEmit` on production sources             |
+| `check`        | `format:check` + `lint` + `type-check`           |
+| `verify`       | `check` + `test` (finish command; does not format) |
+| `test` / `test:watch` | See [testing.md](testing.md)               |
 
-`npm run verify` is the finish command. It does not format files. It runs, in order:
-
-1. `npm run check` — `format:check`, then `lint` (`oxlint`), then `type-check` (`tsc --noEmit`)
-2. `npm test` — `vitest run`
-
-When the tree needs formatting, run `npm run format` (`oxfmt`) first. Use `npm run lint:fix` only when a lint violation has an autofix. Then run `npm run verify` once.
-
-| Script         | What it does                                  |
-| -------------- | --------------------------------------------- |
-| `format`       | Write oxfmt formatting                        |
-| `format:check` | Check formatting only                         |
-| `lint`         | oxlint                                        |
-| `lint:fix`     | oxlint with fixes                             |
-| `type-check`   | `tsc --noEmit` on production sources          |
-| `test`         | Vitest once. A path after `--` runs that file |
-| `test:watch`   | Vitest watch                                  |
-| `check`        | `format:check` + `lint` + `type-check`        |
-| `verify`       | `check` + `test`                              |
-| `build`        | `tsc` and generate `bin/`                     |
-| `clean`        | Remove `dist/` and `bin/`                     |
+When the tree needs formatting, run `npm run format` first, then `npm run verify` once.
 
 ## Runtime config
 
-These files live outside the repo, or are gitignored. The shape is in source; do not copy it into docs.
+Paths and shapes live in source; do not duplicate them here.
 
-| Script           | Config                                                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)). Loader: `src/lib/ai-git-submit/config.ts`                                         |
-| `repos`          | `~/.tfscripts/repos/settings.json` (`src/lib/repos/config.ts`); remote-op state `~/.tfscripts/repos/state.json` (`src/lib/repos/state.ts`) |
-| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`)                                                           |
-| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` session state (`src/lib/keep-awake/state.ts`)                                                        |
+| CLI              | Config / state source                                              |
+| ---------------- | ------------------------------------------------------------------ |
+| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)); loader `src/lib/ai-git-submit/config.ts` |
+| `repos`          | `~/.tfscripts/repos/settings.json` (`config.ts`); remote-op state `state.json` (`state.ts`) |
+| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`) |
+| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` (`src/lib/keep-awake/state.ts`) |
 
-All CLIs that go through `runCliMain` share one run lock at `~/.tfscripts/run.lock` (`src/lib/cli/run-lock.ts`). Help requests skip the lock. `hello` is a smoke entry and does not take it.
+CLIs that use `runCliMain` share `~/.tfscripts/run.lock` (`src/lib/cli/run-lock.ts`); help requests skip the lock. `hello` is a smoke entry and does not use `runCliMain`.
 
-`keep-awake` uses `caffeinate`; `open-in-vscode` needs the `code` CLI. Platform notes: [compatibility.md](compatibility.md). Unit tests inject those collaborators, so `npm test` does not need the host binaries.
+External OS tools and platform notes: [compatibility.md](compatibility.md).

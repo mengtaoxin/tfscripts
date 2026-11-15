@@ -1,6 +1,6 @@
 # Testing
 
-How to run tests and where they live. Process: [test-driven-development](../.agents/skills/test-driven-development/SKILL.md). Command names: [commands.md](commands.md).
+Process: [test-driven-development](../.agents/skills/test-driven-development/SKILL.md). Script names: [commands.md](commands.md).
 
 ## Running
 
@@ -10,22 +10,20 @@ npm run test:watch
 npm test
 ```
 
-Use a focused file during Red / Green. The full suite runs once inside [`npm run verify`](commands.md#verify).
+Use a focused file during Red / Green. The full suite runs once inside [`npm run verify`](commands.md#common-scripts).
 
-Vitest is configured in `vitest.config.ts`: `environment: 'node'`, include `src/**/*.{test,spec}.ts`, `passWithNoTests: true`. An empty suite still exits 0; a behavior change in scope still needs a failing test first.
+Vitest (`vitest.config.ts`): `environment: 'node'`, include `src/**/*.{test,spec}.ts`, `passWithNoTests: true`. Import `describe`, `it`, `expect`, and `vi` from `vitest` (globals off).
 
-Import `describe`, `it`, `expect`, and `vi` from `vitest`. Globals are off.
-
-`npm run type-check` checks production sources only. `tsconfig.json` excludes `src/**/*.test.ts` and `src/**/*.spec.ts`.
+`npm run type-check` covers production sources only; `tsconfig.json` excludes `*.test.ts` / `*.spec.ts`.
 
 ## Where tests go
 
-One layer: unit. There is no end-to-end suite. Lock behavior in the lowest unit test that expresses it.
+Unit tests only. Lock behavior in the lowest unit that expresses it.
 
-| Change                                                | Location                                                                                                       |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Parsing, help text, config, formatting, a pure helper | `<module>.test.ts` next to the module                                                                          |
-| Orchestration (`run`, prompts, session, progress)     | Same folder. Pass the deps the module already accepts (`execFile`, spawn, fs, log)                             |
-| `hello` greeting                                      | `src/hello.test.ts` covers `src/lib/greet.ts`. New scripts colocate the spec next to the module, not the entry |
+| Change                                            | Location                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| Parsing, help, config, formatting, pure helpers   | `<module>.test.ts` next to the module                                    |
+| Orchestration (`run`, prompts, session, progress) | Same folder; pass the deps the module already accepts                    |
+| `hello` greeting                                  | `src/hello.test.ts` covers `src/lib/greet.ts`                            |
 
-Copy a nearby `*.test.ts` for naming and assertions. Prefer `*.test.ts`. Do not shell out to `caffeinate`, `git`, `code`, or the network from a unit test. Do not add an end-to-end test for a pure helper.
+Prefer `*.test.ts`. Inject collaborators (`execFile`, spawn, fs, log); do not shell out to host binaries or the network from a unit test.

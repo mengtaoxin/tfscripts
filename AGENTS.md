@@ -1,17 +1,21 @@
 # tfscripts
 
-Useful TypeScript CLI scripts for macOS. Each command is a top-level `src/<name>.ts` entry; logic lives under `src/lib/`. `npm run build` compiles to `dist/` and writes `bin/` wrappers.
+TypeScript CLI toolkit for everyday macOS chores. Each command is `src/<name>.ts`; logic lives under `src/lib/`. `npm run build` emits `dist/` and `bin/` wrappers.
 
-## Rules
+## Core rules
 
-- Plan and change code by [docs/change-code-steps.md](docs/change-code-steps.md); its "Before finishing" checklist applies to every change.
-- Run commands from the repo root via root `package.json` scripts.
-- Node.js 22+. Scripts that call macOS tools are still tested by injecting those collaborators ([docs/testing.md](docs/testing.md)).
+- Plan and change code via [docs/change-code-steps.md](docs/change-code-steps.md); its "Before finishing" checklist applies to every change.
+- Run from the repo root with root `package.json` scripts. Node.js 22+.
+- Inject OS-tool collaborators in tests; do not shell out to them ([docs/testing.md](docs/testing.md)).
 
-## Read when
+## Doc routing
 
-- Running scripts or verify → [docs/commands.md](docs/commands.md)
-- CLI help / bare invocation / prompts → [docs/cli-rules.md](docs/cli-rules.md)
-- macOS / Linux / Windows support → [docs/compatibility.md](docs/compatibility.md)
-- Running or writing tests → [docs/testing.md](docs/testing.md)
-- Adding or moving files → [docs/file-structure.md](docs/file-structure.md)
+| Need                                         | Doc                                              |
+| -------------------------------------------- | ------------------------------------------------ |
+| Change workflow / finish checklist           | [docs/change-code-steps.md](docs/change-code-steps.md) |
+| Layout / new commands                        | [docs/file-structure.md](docs/file-structure.md)  |
+| Setup, scripts, verify, runtime config paths | [docs/commands.md](docs/commands.md)              |
+| Tests                                        | [docs/testing.md](docs/testing.md)                |
+| Tech stack                                   | [docs/tech-stack.md](docs/tech-stack.md)          |
+| Help / bare / flags / prompts                | [docs/cli-rules.md](docs/cli-rules.md)            |
+| OS tools and platform surface                | [docs/compatibility.md](docs/compatibility.md)    |

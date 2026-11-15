@@ -1,0 +1,3 @@
+# Lock files — keep readable by path, exclude from index
+package-lock.json
+skills-lock.json
