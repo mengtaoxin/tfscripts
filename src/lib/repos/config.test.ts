@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { defaultSettingsPath, loadSettings, ConfigError } from './config.js';
+import {
+  DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS,
+  defaultSettingsPath,
+  loadSettings,
+  ConfigError,
+} from './config.js';
 
 describe('defaultSettingsPath', () => {
   it('resolves under ~/.tfscripts/repos/settings.json', () => {
@@ -23,6 +28,71 @@ describe('loadSettings', () => {
       { path: '/abs/bar', name: 'bar', environment: 'local' },
     ]);
     expect(settings.showCommitCountDays).toBeUndefined();
+    expect(settings.remoteOperationThrottlingSeconds).toBe(
+      DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS,
+    );
+  });
+
+  it('defaults remote-operation.throttling to 10 seconds when omitted', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () => JSON.stringify({ repos: [{ path: '/abs/bar' }] }),
+    });
+
+    expect(settings.remoteOperationThrottlingSeconds).toBe(10);
+  });
+
+  it('loads optional remote-operation.throttling as a positive integer', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () =>
+        JSON.stringify({
+          'remote-operation.throttling': 5,
+          repos: [{ path: '/abs/bar' }],
+        }),
+    });
+
+    expect(settings.remoteOperationThrottlingSeconds).toBe(5);
+  });
+
+  it('rejects invalid remote-operation.throttling values', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'remote-operation.throttling': 0,
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/remote-operation\.throttling must be a positive integer/);
+
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'remote-operation.throttling': 1.5,
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/remote-operation\.throttling must be a positive integer/);
+
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            'remote-operation.throttling': '10',
+            repos: [{ path: '/abs/bar' }],
+          }),
+      }),
+    ).toThrow(/remote-operation\.throttling must be a positive integer/);
   });
 
   it('loads optional list.show-commit-count as a positive integer', () => {

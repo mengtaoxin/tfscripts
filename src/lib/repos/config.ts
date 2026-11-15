@@ -21,10 +21,17 @@ export interface RepoEntry {
   aiGitSubmitParameters?: readonly string[];
 }
 
+export const DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS = 10;
+
 export interface RepoSyncSettings {
   repos: readonly RepoEntry[];
   /** When set, `repos check` shows a COMMITS (Nd) column for the last N days. */
   showCommitCountDays?: number;
+  /**
+   * Minimum seconds between remote operations per repo (`remote-operation.throttling`).
+   * Defaults to {@link DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS}.
+   */
+  remoteOperationThrottlingSeconds: number;
 }
 
 export function defaultSettingsPath(home: string = homedir()): string {
@@ -99,6 +106,7 @@ function parseAiGitSubmitParameters(raw: unknown, index: number): readonly strin
 }
 
 const SHOW_COMMIT_COUNT_KEY = 'list.show-commit-count';
+const REMOTE_OPERATION_THROTTLING_KEY = 'remote-operation.throttling';
 
 function parseShowCommitCountDays(raw: unknown): number | undefined {
   if (raw === undefined) {
@@ -106,6 +114,16 @@ function parseShowCommitCountDays(raw: unknown): number | undefined {
   }
   if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) {
     throw new ConfigError(`${SHOW_COMMIT_COUNT_KEY} must be a positive integer.`);
+  }
+  return raw;
+}
+
+function parseRemoteOperationThrottlingSeconds(raw: unknown): number {
+  if (raw === undefined) {
+    return DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS;
+  }
+  if (typeof raw !== 'number' || !Number.isInteger(raw) || raw < 1) {
+    throw new ConfigError(`${REMOTE_OPERATION_THROTTLING_KEY} must be a positive integer.`);
   }
   return raw;
 }
@@ -137,7 +155,11 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     throw new ConfigError('Settings must include a "repos" array.');
   }
 
-  const record = parsed as { repos: unknown; [SHOW_COMMIT_COUNT_KEY]?: unknown };
+  const record = parsed as {
+    repos: unknown;
+    [SHOW_COMMIT_COUNT_KEY]?: unknown;
+    [REMOTE_OPERATION_THROTTLING_KEY]?: unknown;
+  };
   const { repos } = record;
   if (!Array.isArray(repos)) {
     throw new ConfigError('Settings "repos" must be an array.');
@@ -147,6 +169,9 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
   }
 
   const showCommitCountDays = parseShowCommitCountDays(record[SHOW_COMMIT_COUNT_KEY]);
+  const remoteOperationThrottlingSeconds = parseRemoteOperationThrottlingSeconds(
+    record[REMOTE_OPERATION_THROTTLING_KEY],
+  );
 
   const entries: RepoEntry[] = [];
   for (let i = 0; i < repos.length; i++) {
@@ -188,7 +213,10 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     entries.push(entry);
   }
 
-  const settings: RepoSyncSettings = { repos: entries };
+  const settings: RepoSyncSettings = {
+    repos: entries,
+    remoteOperationThrottlingSeconds,
+  };
   if (showCommitCountDays !== undefined) {
     settings.showCommitCountDays = showCommitCountDays;
   }

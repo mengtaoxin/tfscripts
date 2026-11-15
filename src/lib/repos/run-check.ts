@@ -8,11 +8,13 @@ import { checkOne, type CheckOneResult } from './check-one.js';
 import { formatCheckTable, formatProgressLine } from './format.js';
 import { mapPool } from './pool.js';
 import { createStdoutProgress, type ProgressWriter } from './progress.js';
+import { defaultStatePath } from './state.js';
 
 export const DEFAULT_CONCURRENCY = 3;
 
 export interface RunRepoCheckDeps {
   settingsPath?: string;
+  statePath?: string;
   loadSettings?: (path: string) => RepoSyncSettings;
   checkOne?: (
     entry: RepoEntry,
@@ -45,17 +47,9 @@ export async function runRepoCheck(deps: RunRepoCheckDeps = {}): Promise<RunRepo
   const error = deps.error ?? ((line) => console.error(line));
   const progress = resolveProgress(deps);
   const settingsPath = deps.settingsPath ?? defaultSettingsPath();
+  const statePath = deps.statePath ?? defaultStatePath();
   const load = deps.loadSettings ?? ((path) => loadSettings({ settingsPath: path }));
   const remoteHomeCache = new Map<string, string>();
-  const check =
-    deps.checkOne ??
-    ((entry, options) =>
-      checkOne(entry, {
-        remoteHomeCache,
-        ...(options?.showCommitCountDays !== undefined
-          ? { showCommitCountDays: options.showCommitCountDays }
-          : {}),
-      }));
   const concurrency = deps.concurrency ?? DEFAULT_CONCURRENCY;
 
   let settings: RepoSyncSettings;
@@ -65,6 +59,18 @@ export async function runRepoCheck(deps: RunRepoCheckDeps = {}): Promise<RunRepo
     error(err instanceof Error ? err.message : String(err));
     return { exitCode: 1, results: [] };
   }
+
+  const check =
+    deps.checkOne ??
+    ((entry, options) =>
+      checkOne(entry, {
+        remoteHomeCache,
+        remoteOperationThrottlingSeconds: settings.remoteOperationThrottlingSeconds,
+        statePath,
+        ...(options?.showCommitCountDays !== undefined
+          ? { showCommitCountDays: options.showCommitCountDays }
+          : {}),
+      }));
 
   const showCommitCountDays = settings.showCommitCountDays;
   const checkOptions = showCommitCountDays === undefined ? undefined : { showCommitCountDays };

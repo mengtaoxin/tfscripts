@@ -11,6 +11,7 @@ describe('runRepoList', () => {
           { name: 'repo-1', path: '/a' },
           { name: 'my-long-repo', path: '/Users/me/repos/my-long-repo' },
         ],
+        remoteOperationThrottlingSeconds: 10,
       }),
       log: (line) => lines.push(line),
       error: vi.fn(),

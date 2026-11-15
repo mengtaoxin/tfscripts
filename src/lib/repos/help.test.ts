@@ -15,6 +15,7 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('"ssh-host": "devbox"');
     expect(HELP_TEXT).toContain('ai-git-submit-parameters');
     expect(HELP_TEXT).toContain('list.show-commit-count');
+    expect(HELP_TEXT).toContain('remote-operation.throttling');
   });
 });
 
@@ -25,8 +26,10 @@ describe('helpTextFor', () => {
     expect(helpTextFor('list')).toBe(HELP_LIST);
     expect(helpTextFor('submit')).toBe(HELP_SUBMIT);
     expect(HELP_UPDATE).toContain('repos update');
+    expect(HELP_UPDATE).toContain('remote-operation.throttling');
     expect(HELP_CHECK).toContain('repos check');
     expect(HELP_CHECK).toContain('list.show-commit-count');
+    expect(HELP_CHECK).toContain('remote-operation.throttling');
     expect(HELP_LIST).toContain('repos list');
     expect(HELP_LIST).not.toContain('--show-commit-count');
     expect(HELP_LIST).not.toContain('-scc');

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { checkOne } from './check-one.js';
 import type { ExecFileFn } from './git.js';
+import { REMOTE_OPERATION_THROTTLED_REASON } from './remote-operation-throttle.js';
+import type { ReposState } from './state.js';
 
 function createExecFile(handler: (joined: string) => { stdout: string; stderr: string } | void) {
   const execFile: ExecFileFn = vi.fn(async (_file, args) => {
@@ -197,5 +199,87 @@ describe('checkOne', () => {
       status: 'failed',
       reason: SSH_FINGERPRINT_REASON,
     });
+  });
+
+  it('fails as throttled without calling git when inside the cooldown window', async () => {
+    let stored: ReposState = {
+      '/repos/repo-1': { 'last-remote-operation-time': '2026-11-15T14:01:05.000Z' },
+    };
+    const writeFile = vi.fn((_path: string, data: string) => {
+      stored = JSON.parse(data) as ReposState;
+    });
+    const execFile = vi.fn();
+    const resolveRemoteHome = vi.fn();
+
+    const result = await checkOne(entry, {
+      git: { execFile },
+      accessPath: async () => undefined,
+      resolveRemoteHome,
+      remoteOperationThrottlingSeconds: 10,
+      statePath: '/tmp/repos-state.json',
+      now: () => new Date('2026-11-15T14:01:10.000Z'),
+      readStateFile: () => JSON.stringify(stored),
+      writeStateFile: writeFile,
+      mkdirState: () => undefined,
+    });
+
+    expect(result).toEqual({
+      name: 'repo-1',
+      path: '/repos/repo-1',
+      branch: '',
+      status: 'failed',
+      remoteBehind: 0,
+      localAhead: 0,
+      dirtyLines: 0,
+      reason: REMOTE_OPERATION_THROTTLED_REASON,
+    });
+    expect(execFile).not.toHaveBeenCalled();
+    expect(resolveRemoteHome).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('stamps last-remote-operation-time before fetching when allowed', async () => {
+    let stored: ReposState = {};
+    const writeFile = vi.fn((_path: string, data: string) => {
+      stored = JSON.parse(data) as ReposState;
+    });
+    const execFile = createExecFile((joined) => {
+      if (joined === 'rev-parse --abbrev-ref HEAD') {
+        return { stdout: 'main\n', stderr: '' };
+      }
+      if (joined === 'rev-parse --abbrev-ref @{u}') {
+        return { stdout: 'origin/main\n', stderr: '' };
+      }
+      if (joined === 'rev-list --count HEAD..@{u}') {
+        return { stdout: '0\n', stderr: '' };
+      }
+      if (joined === 'rev-list --count @{u}..HEAD') {
+        return { stdout: '0\n', stderr: '' };
+      }
+      if (joined === 'diff --numstat HEAD') {
+        return { stdout: '', stderr: '' };
+      }
+      if (joined === 'ls-files -o --exclude-standard') {
+        return { stdout: '', stderr: '' };
+      }
+      return { stdout: '', stderr: '' };
+    });
+
+    const result = await checkOne(entry, {
+      git: { execFile },
+      accessPath: async () => undefined,
+      remoteOperationThrottlingSeconds: 10,
+      statePath: '/tmp/repos-state.json',
+      now: () => new Date('2026-11-15T14:01:10.000Z'),
+      readStateFile: () => JSON.stringify(stored),
+      writeStateFile: writeFile,
+      mkdirState: () => undefined,
+    });
+
+    expect(result.status).toBe('ok');
+    expect(stored['/repos/repo-1']).toEqual({
+      'last-remote-operation-time': '2026-11-15T14:01:10.000Z',
+    });
+    expect(execFile).toHaveBeenCalledWith('git', ['fetch', '--prune'], expect.any(Object));
   });
 });

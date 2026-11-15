@@ -42,11 +42,11 @@ When the tree needs formatting, run `npm run format` (`oxfmt`) first. Use `npm r
 
 These files live outside the repo, or are gitignored. The shape is in source; do not copy it into docs.
 
-| Script           | Config                                                                                             |
-| ---------------- | -------------------------------------------------------------------------------------------------- |
-| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)). Loader: `src/lib/ai-git-submit/config.ts` |
-| `repos`          | `~/.tfscripts/repos/settings.json` (`src/lib/repos/config.ts`)                                     |
-| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`)                   |
-| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` session state (`src/lib/keep-awake/state.ts`)                |
+| Script           | Config                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)). Loader: `src/lib/ai-git-submit/config.ts`                                               |
+| `repos`          | `~/.tfscripts/repos/settings.json` (`src/lib/repos/config.ts`); remote-op state `~/.tfscripts/repos/repos/state.json` (`src/lib/repos/state.ts`) |
+| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`)                                                                 |
+| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` session state (`src/lib/keep-awake/state.ts`)                                                              |
 
 `keep-awake` uses `caffeinate`; `open-in-vscode` needs the `code` CLI. Platform notes: [compatibility.md](compatibility.md). Unit tests inject those collaborators, so `npm test` does not need the host binaries.

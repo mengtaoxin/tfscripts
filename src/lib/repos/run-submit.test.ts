@@ -12,6 +12,7 @@ describe('runRepoSubmit', () => {
             { name: 'foo', path: '/a', environment: 'local' },
             { name: 'bar', path: '/b', environment: 'local' },
           ],
+          remoteOperationThrottlingSeconds: 10,
         }),
         submitOne,
         error: vi.fn(),
@@ -33,6 +34,7 @@ describe('runRepoSubmit', () => {
       {
         loadSettings: () => ({
           repos: [{ name: 'foo', path: '/a', environment: 'local' }],
+          remoteOperationThrottlingSeconds: 10,
         }),
         submitOne,
         error,
@@ -55,6 +57,7 @@ describe('runRepoSubmit', () => {
             { name: 'dup', path: '/a', environment: 'local' },
             { name: 'dup', path: '/b', environment: 'ssh', sshHost: 'devbox' },
           ],
+          remoteOperationThrottlingSeconds: 10,
         }),
         submitOne,
         error,

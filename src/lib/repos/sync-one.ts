@@ -14,7 +14,9 @@ import {
   stashPush,
   type GitDeps,
 } from './git.js';
+import { tryBeginRemoteOperation } from './remote-operation-throttle.js';
 import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
+import { defaultStatePath, repoStateKey } from './state.js';
 
 export type SyncStatus = 'up-to-date' | 'updated' | 'failed';
 
@@ -29,6 +31,13 @@ export interface SyncOneResult {
 export interface SyncOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   git?: GitDeps;
   accessPath?: (path: string) => Promise<void>;
+  /** When set, enforces per-repo remote-operation throttling before any remote work. */
+  remoteOperationThrottlingSeconds?: number;
+  statePath?: string;
+  now?: () => Date;
+  readStateFile?: (path: string) => string;
+  writeStateFile?: (path: string, data: string, encoding: 'utf8') => void;
+  mkdirState?: (path: string, options: { recursive: boolean }) => void;
 }
 
 const STASH_MESSAGE = 'repos autostash';
@@ -59,6 +68,21 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
   let working = entry;
   let git: GitDeps;
   let accessPath: (path: string) => Promise<void>;
+
+  if (deps.remoteOperationThrottlingSeconds !== undefined) {
+    const gate = tryBeginRemoteOperation({
+      statePath: deps.statePath ?? defaultStatePath(),
+      key: repoStateKey(entry),
+      throttlingSeconds: deps.remoteOperationThrottlingSeconds,
+      ...(deps.now !== undefined ? { now: deps.now } : {}),
+      ...(deps.readStateFile !== undefined ? { readFile: deps.readStateFile } : {}),
+      ...(deps.writeStateFile !== undefined ? { writeFile: deps.writeStateFile } : {}),
+      ...(deps.mkdirState !== undefined ? { mkdir: deps.mkdirState } : {}),
+    });
+    if (!gate.allowed) {
+      return failResult(entry, branch, gate.reason);
+    }
+  }
 
   try {
     const resolved = await resolveRepoTarget(entry, deps);

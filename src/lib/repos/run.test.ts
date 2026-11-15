@@ -27,6 +27,7 @@ describe('runRepoSync', () => {
           { name: 'repo-1', path: '/a' },
           { name: 'repo-2', path: '/b' },
         ],
+        remoteOperationThrottlingSeconds: 10,
       }),
       syncOne: async (entry) => (entry.name === 'repo-1' ? pending1 : pending2),
       log: (line) => lines.push(line),
@@ -71,6 +72,7 @@ describe('runRepoSync', () => {
     const exit = await runRepoSync({
       loadSettings: () => ({
         repos: [{ name: 'repo-1', path: '/a' }],
+        remoteOperationThrottlingSeconds: 10,
       }),
       syncOne: async () => ({
         name: 'repo-1',
@@ -103,6 +105,7 @@ describe('runRepoSync', () => {
           },
           { name: 'local-repo', path: '/a', environment: 'local' },
         ],
+        remoteOperationThrottlingSeconds: 10,
       }),
       syncOne: async (entry) => {
         if (entry.name === 'remote-repo') {
