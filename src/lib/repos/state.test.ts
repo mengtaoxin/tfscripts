@@ -10,8 +10,8 @@ import {
 } from './state.js';
 
 describe('defaultStatePath', () => {
-  it('resolves under ~/.tfscripts/repos/repos/state.json', () => {
-    expect(defaultStatePath('/home/me')).toBe('/home/me/.tfscripts/repos/repos/state.json');
+  it('resolves under ~/.tfscripts/repos/state.json', () => {
+    expect(defaultStatePath('/home/me')).toBe('/home/me/.tfscripts/repos/state.json');
   });
 });
 
@@ -90,15 +90,15 @@ describe('readReposState / writeReposState', () => {
     };
 
     writeReposState({
-      statePath: '/home/me/.tfscripts/repos/repos/state.json',
+      statePath: '/home/me/.tfscripts/repos/state.json',
       state,
       mkdir,
       writeFile,
     });
 
-    expect(mkdir).toHaveBeenCalledWith('/home/me/.tfscripts/repos/repos', { recursive: true });
+    expect(mkdir).toHaveBeenCalledWith('/home/me/.tfscripts/repos', { recursive: true });
     expect(writeFile).toHaveBeenCalledWith(
-      '/home/me/.tfscripts/repos/repos/state.json',
+      '/home/me/.tfscripts/repos/state.json',
       `${JSON.stringify(state, null, 2)}\n`,
       'utf8',
     );

@@ -12,7 +12,7 @@ export interface RepoRemoteState {
 export type ReposState = Readonly<Record<string, RepoRemoteState>>;
 
 export function defaultStatePath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'repos', 'repos', 'state.json');
+  return join(home, '.tfscripts', 'repos', 'state.json');
 }
 
 export function repoStateKey(entry: RepoEntry): string {
