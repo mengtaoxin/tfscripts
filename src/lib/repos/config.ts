@@ -115,6 +115,16 @@ function parseAfterUpdateCommands(raw: unknown, index: number): readonly string[
   return parseStringArrayField(raw, index, 'after-update-commands');
 }
 
+function parseName(raw: unknown, resolvedPath: string, index: number): string {
+  if (raw === undefined) {
+    return basename(resolvedPath);
+  }
+  if (typeof raw !== 'string' || raw.trim() === '') {
+    throw new ConfigError(`repos[${index}].name must be a non-empty string.`);
+  }
+  return raw.trim();
+}
+
 const SHOW_COMMIT_COUNT_KEY = 'list.show-commit-count';
 const REMOTE_OPERATION_THROTTLING_KEY = 'remote-operation.throttling';
 
@@ -191,6 +201,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     }
     const repoRecord = item as {
       path: unknown;
+      name?: unknown;
       environment?: unknown;
       'ssh-host'?: unknown;
       'ai-git-submit-parameters'?: unknown;
@@ -210,10 +221,11 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
     const afterUpdateCommands = parseAfterUpdateCommands(repoRecord['after-update-commands'], i);
     const trimmedPath = path.trim();
     const resolvedPath = environment === 'ssh' ? trimmedPath : expandHome(trimmedPath, home);
+    const name = parseName(repoRecord.name, resolvedPath, i);
 
     const entry: RepoEntry = {
       path: resolvedPath,
-      name: basename(resolvedPath),
+      name,
       environment,
     };
     if (sshHost !== undefined) {

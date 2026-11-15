@@ -15,6 +15,7 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('"ssh-host": "devbox"');
     expect(HELP_TEXT).toContain('ai-git-submit-parameters');
     expect(HELP_TEXT).toContain('after-update-commands');
+    expect(HELP_TEXT).toContain('"name": "local-tfscripts"');
     expect(HELP_TEXT).toContain('list.show-commit-count');
     expect(HELP_TEXT).toContain('remote-operation.throttling');
   });

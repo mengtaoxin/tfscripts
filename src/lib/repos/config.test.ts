@@ -233,6 +233,49 @@ describe('loadSettings', () => {
     ).toThrow(/repos\[0\]\.ai-git-submit-parameters must be an array of non-empty strings/);
   });
 
+  it('uses optional name over path basename', () => {
+    const settings = loadSettings({
+      settingsPath: '/cfg/settings.json',
+      home: '/Users/me',
+      readFile: () =>
+        JSON.stringify({
+          repos: [
+            {
+              name: 'local-tfscripts',
+              path: '~/.tfscripts/source',
+              'after-update-commands': ['npm install', 'npm run build'],
+            },
+            { path: '/abs/bar' },
+          ],
+        }),
+    });
+
+    expect(settings.repos[0]).toEqual({
+      path: '/Users/me/.tfscripts/source',
+      name: 'local-tfscripts',
+      environment: 'local',
+      afterUpdateCommands: ['npm install', 'npm run build'],
+    });
+    expect(settings.repos[1]).toEqual({
+      path: '/abs/bar',
+      name: 'bar',
+      environment: 'local',
+    });
+  });
+
+  it('rejects empty name', () => {
+    expect(() =>
+      loadSettings({
+        settingsPath: '/cfg.json',
+        home: '/Users/me',
+        readFile: () =>
+          JSON.stringify({
+            repos: [{ path: '/abs/bar', name: '  ' }],
+          }),
+      }),
+    ).toThrow(/repos\[0\]\.name must be a non-empty string/);
+  });
+
   it('loads optional after-update-commands next to path', () => {
     const settings = loadSettings({
       settingsPath: '/cfg/settings.json',

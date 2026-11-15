@@ -17,6 +17,7 @@ Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
       { "path": "/exampleDir/repo-1" },
       { "path": "~/repos/repo-2" },
       {
+        "name": "local-tfscripts",
         "path": "~/repos/repo-3",
         "environment": "ssh",
         "ssh-host": "devbox",
@@ -26,11 +27,13 @@ Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
     ]
   }
 
-Each entry needs "path". The display name is the folder name.
+Each entry needs "path". The display name defaults to the folder name; optional
+"name" overrides it.
 Optional top-level fields:
   list.show-commit-count         Positive integer; when set, repos check adds a COMMITS (Nd) column
   remote-operation.throttling    Positive integer seconds between remote ops per repo (default 10)
 Optional per-repo fields (siblings of path):
+  name                      Display name (defaults to the path's last segment)
   environment               "local" (default) or "ssh"
   ssh-host                  Host alias from ~/.ssh/config (required when environment is ssh)
   ai-git-submit-parameters   Argv fragments for repos submit (ai-git-submit flags)
@@ -128,11 +131,11 @@ Usage:
   repos help submit
   repos submit --help
 
-Runs the ai-git-submit flow for the settings entry whose folder name
-matches --name. Always non-interactive. Optional per-repo
-ai-git-submit-parameters (argv fragments such as "--add yes") are parsed
-like ai-git-submit flags; omitted --add/--push/--protect-main use
-ai-git-submit defaults.
+Runs the ai-git-submit flow for the settings entry whose display name
+matches --name (explicit "name", or the path's last segment). Always
+non-interactive. Optional per-repo ai-git-submit-parameters (argv
+fragments such as "--add yes") are parsed like ai-git-submit flags;
+omitted --add/--push/--protect-main use ai-git-submit defaults.
 
 For environment ssh, git runs on the remote host (key-based auth only);
 the LLM API uses AI_GIT_SUBMIT_* from the local process environment.
