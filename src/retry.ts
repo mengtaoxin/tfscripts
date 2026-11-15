@@ -1,4 +1,5 @@
 import { EXIT_USAGE, exitCodeForParseFailure } from './lib/cli/exit-codes.js';
+import { assertSupportedPlatform } from './lib/cli/platform.js';
 import { resolveInteractiveOptions } from './lib/cli/resolve-options.js';
 import { runCliMain } from './lib/cli/run-main.js';
 import { HELP_TEXT } from './lib/retry/help.js';
@@ -32,6 +33,8 @@ async function main(argv: readonly string[]): Promise<number> {
     console.log(HELP_TEXT.trimEnd());
     return 0;
   }
+
+  assertSupportedPlatform({ command: 'retry', supported: ['darwin', 'linux'] });
 
   const presets = {
     command: parsed.shellCommand,
