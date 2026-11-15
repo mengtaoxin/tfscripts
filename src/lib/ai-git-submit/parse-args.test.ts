@@ -9,6 +9,7 @@ describe('parseArgs', () => {
       noInput: false,
       add: undefined,
       push: undefined,
+      protectMain: undefined,
     });
   });
 
@@ -33,6 +34,7 @@ describe('parseArgs', () => {
       noInput: false,
       add: true,
       push: false,
+      protectMain: undefined,
     });
     expect(parseArgs(['--push', 'YES', '--add', 'NO'])).toEqual({
       ok: true,
@@ -40,6 +42,7 @@ describe('parseArgs', () => {
       noInput: false,
       add: false,
       push: true,
+      protectMain: undefined,
     });
     expect(parseArgs(['--add', 'yes'])).toEqual({
       ok: true,
@@ -47,6 +50,7 @@ describe('parseArgs', () => {
       noInput: false,
       add: true,
       push: undefined,
+      protectMain: undefined,
     });
     expect(parseArgs(['--push', 'yes', '--no-input'])).toEqual({
       ok: true,
@@ -54,6 +58,23 @@ describe('parseArgs', () => {
       noInput: true,
       add: undefined,
       push: true,
+      protectMain: undefined,
+    });
+    expect(parseArgs(['--protect-main', 'no', '--add', 'yes', '--push', 'yes'])).toEqual({
+      ok: true,
+      command: 'submit',
+      noInput: false,
+      add: true,
+      push: true,
+      protectMain: false,
+    });
+    expect(parseArgs(['--protect-main', 'YES'])).toEqual({
+      ok: true,
+      command: 'submit',
+      noInput: false,
+      add: undefined,
+      push: undefined,
+      protectMain: true,
     });
   });
 
@@ -67,6 +88,11 @@ describe('parseArgs', () => {
       ok: false,
       reason: 'invalid',
       message: '--push must be "yes" or "no".',
+    });
+    expect(parseArgs(['--protect-main', 'maybe'])).toEqual({
+      ok: false,
+      reason: 'invalid',
+      message: '--protect-main must be "yes" or "no".',
     });
     expect(parseArgs(['--add'])).toEqual({
       ok: false,

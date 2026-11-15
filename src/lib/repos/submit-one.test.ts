@@ -20,7 +20,7 @@ describe('submitOne', () => {
 
     expect(exitCode).toBe(0);
     expect(executeSubmitFn).toHaveBeenCalledWith(
-      { add: true, push: true, noInput: true },
+      { add: true, push: true, protectMain: undefined, noInput: true },
       expect.objectContaining({
         git: expect.objectContaining({ cwd: '/local/tfscripts' }),
         isTTY: false,
@@ -50,7 +50,7 @@ describe('submitOne', () => {
 
     expect(exitCode).toBe(0);
     expect(executeSubmitFn).toHaveBeenCalledWith(
-      { add: true, push: undefined, noInput: true },
+      { add: true, push: undefined, protectMain: undefined, noInput: true },
       expect.objectContaining({
         git: expect.objectContaining({
           cwd: '/home/me/repos/tfscripts',

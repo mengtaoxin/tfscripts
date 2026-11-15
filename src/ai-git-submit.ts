@@ -24,6 +24,7 @@ async function main(argv: readonly string[]): Promise<number> {
   return executeSubmit({
     add: parsed.add,
     push: parsed.push,
+    protectMain: parsed.protectMain,
     noInput: parsed.noInput,
   });
 }

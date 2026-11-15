@@ -27,7 +27,7 @@ describe('executeSubmit', () => {
   });
 
   it('prompts and submits when inside a git repository', async () => {
-    const prompt = vi.fn().mockResolvedValue({ add: true, push: false });
+    const prompt = vi.fn().mockResolvedValue({ add: true, push: false, protectMain: true });
     const runSubmitFn = vi.fn().mockResolvedValue({ exitCode: 0, commitMessage: 'feat: x' });
 
     const exitCode = await executeSubmit(
@@ -43,6 +43,29 @@ describe('executeSubmit', () => {
 
     expect(exitCode).toBe(0);
     expect(prompt).toHaveBeenCalled();
-    expect(runSubmitFn).toHaveBeenCalledWith({ add: true, push: false }, expect.any(Object));
+    expect(runSubmitFn).toHaveBeenCalledWith(
+      { add: true, push: false, protectMain: true },
+      expect.any(Object),
+    );
+  });
+
+  it('applies protect-main default under --no-input', async () => {
+    const runSubmitFn = vi.fn().mockResolvedValue({ exitCode: 0 });
+
+    const exitCode = await executeSubmit(
+      { add: true, push: false, noInput: true },
+      {
+        resolveRepoRootFn: vi.fn().mockResolvedValue('/repo'),
+        runSubmitFn,
+        error: vi.fn(),
+        isTTY: false,
+      },
+    );
+
+    expect(exitCode).toBe(0);
+    expect(runSubmitFn).toHaveBeenCalledWith(
+      { add: true, push: false, protectMain: true },
+      expect.any(Object),
+    );
   });
 });

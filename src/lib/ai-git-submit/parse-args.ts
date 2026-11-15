@@ -9,6 +9,7 @@ export type ParseSuccess =
       noInput: boolean;
       add: boolean | undefined;
       push: boolean | undefined;
+      protectMain: boolean | undefined;
     };
 
 export type ParseFailure = {
@@ -19,7 +20,7 @@ export type ParseFailure = {
 
 export type ParseResult = ParseSuccess | ParseFailure;
 
-const KNOWN_FLAGS = new Set(['--add', '--push', '--no-input']);
+const KNOWN_FLAGS = new Set(['--add', '--push', '--protect-main', '--no-input']);
 const VALUELESS_FLAGS = new Set(['--no-input']);
 
 export function parseArgs(argv: readonly string[]): ParseResult {
@@ -30,6 +31,7 @@ export function parseArgs(argv: readonly string[]): ParseResult {
       noInput: false,
       add: undefined,
       push: undefined,
+      protectMain: undefined,
     };
   }
 
@@ -64,6 +66,10 @@ export function parseArgs(argv: readonly string[]): ParseResult {
   if (!push.ok) {
     return { ok: false, reason: 'invalid', message: push.message };
   }
+  const protectMain = parseYesNoFlag(argv, '--protect-main');
+  if (!protectMain.ok) {
+    return { ok: false, reason: 'invalid', message: protectMain.message };
+  }
 
   return {
     ok: true,
@@ -71,5 +77,6 @@ export function parseArgs(argv: readonly string[]): ParseResult {
     noInput: argv.includes('--no-input'),
     add: add.value,
     push: push.value,
+    protectMain: protectMain.value,
   };
 }

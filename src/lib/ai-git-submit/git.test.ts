@@ -4,6 +4,7 @@ import {
   getRepoName,
   getStagedDiff,
   gitAddAll,
+  gitCheckoutNewBranch,
   gitCommitWithMessage,
   gitPush,
   resolveRepoRoot,
@@ -62,5 +63,25 @@ describe('git helpers', () => {
     const execFile = vi.fn().mockResolvedValue({ stdout: '', stderr: '' });
     await gitPush({ execFile });
     expect(execFile).toHaveBeenCalledWith('git', ['push'], expect.any(Object));
+  });
+
+  it('gitCheckoutNewBranch runs git checkout -b', async () => {
+    const execFile = vi.fn().mockResolvedValue({ stdout: '', stderr: '' });
+    await gitCheckoutNewBranch('feature/20261115-153045-ab12c', { execFile, cwd: '/repo' });
+    expect(execFile).toHaveBeenCalledWith(
+      'git',
+      ['checkout', '-b', 'feature/20261115-153045-ab12c'],
+      { cwd: '/repo' },
+    );
+  });
+
+  it('gitPush with setUpstream runs git push -u origin HEAD', async () => {
+    const execFile = vi.fn().mockResolvedValue({ stdout: '', stderr: '' });
+    await gitPush({ execFile }, { setUpstream: true });
+    expect(execFile).toHaveBeenCalledWith(
+      'git',
+      ['push', '-u', 'origin', 'HEAD'],
+      expect.any(Object),
+    );
   });
 });

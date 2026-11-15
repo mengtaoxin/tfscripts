@@ -1,11 +1,13 @@
 import type { AiGitSubmitConfig } from './config.js';
 import { resolveConfig } from './config.js';
+import { createRandomAlphanumeric, formatFeatureBranchName } from './feature-branch-name.js';
 import {
   getBranchName,
   getRepoName,
   getStagedDiff,
   getStagedStat,
   gitAddAll,
+  gitCheckoutNewBranch,
   gitCommitWithMessage,
   gitPush,
   resolveRepoRoot,
@@ -15,9 +17,12 @@ import { generateCommitMessage, type GenerateCommitMessageDeps } from './llm.js'
 import { withExponentialBackoff } from '../retry-policy/backoff.js';
 import { isNetworkError } from '../retry-policy/network-error.js';
 
+const PROTECTED_BRANCHES = new Set(['main', 'master']);
+
 export interface SubmitOptions {
   add: boolean;
   push: boolean;
+  protectMain: boolean;
 }
 
 export interface RunSubmitDeps {
@@ -28,6 +33,8 @@ export interface RunSubmitDeps {
   log?: (message: string) => void;
   error?: (message: string) => void;
   sleep?: (ms: number) => Promise<void>;
+  now?: () => Date;
+  randomBytes?: (size: number) => Buffer;
 }
 
 export interface RunSubmitResult {
@@ -87,6 +94,22 @@ export async function runSubmit(
     return { exitCode: 1 };
   }
 
+  let createdProtectBranch = false;
+  if (options.protectMain && PROTECTED_BRANCHES.has(branchName)) {
+    const now = deps.now?.() ?? new Date();
+    const randomStr = createRandomAlphanumeric(5, deps.randomBytes);
+    const featureBranch = formatFeatureBranchName(now, randomStr);
+    log(`Protecting ${branchName}: creating branch ${featureBranch}...`);
+    try {
+      await gitCheckoutNewBranch(featureBranch, git);
+    } catch (err) {
+      error(`git checkout failed: ${err instanceof Error ? err.message : String(err)}`);
+      return { exitCode: 1 };
+    }
+    branchName = featureBranch;
+    createdProtectBranch = true;
+  }
+
   if (stagedDiff.trim() === '') {
     error('No staged changes to commit.');
     return { exitCode: 1 };
@@ -132,15 +155,18 @@ export async function runSubmit(
   if (options.push) {
     log('Pushing...');
     try {
-      await withExponentialBackoff(() => gitPush(git), {
-        maxRetries: config.maxRetries,
-        baseMs: config.retryBaseMs,
-        sleep: deps.sleep,
-        shouldRetry: isNetworkError,
-        onRetry: ({ attempt, delayMs }) => {
-          log(`git push failed (attempt ${attempt + 1}); retrying in ${delayMs}ms...`);
+      await withExponentialBackoff(
+        () => gitPush(git, createdProtectBranch ? { setUpstream: true } : {}),
+        {
+          maxRetries: config.maxRetries,
+          baseMs: config.retryBaseMs,
+          sleep: deps.sleep,
+          shouldRetry: isNetworkError,
+          onRetry: ({ attempt, delayMs }) => {
+            log(`git push failed (attempt ${attempt + 1}); retrying in ${delayMs}ms...`);
+          },
         },
-      });
+      );
       log('Push succeeded.');
     } catch (err) {
       error(`git push failed: ${err instanceof Error ? err.message : String(err)}`);

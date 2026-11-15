@@ -12,15 +12,16 @@ const baseConfig: AiGitSubmitConfig = {
   retryBaseMs: 10,
 };
 
-function createGitMock(options?: { stagedDiff?: string }) {
+function createGitMock(options?: { stagedDiff?: string; branch?: string }) {
   const stagedDiff = options?.stagedDiff ?? 'diff --git a/a.ts\n+line\n';
+  const branch = options?.branch ?? 'main';
   const execFile = vi.fn(async (_file: string, args: readonly string[]) => {
     const joined = args.join(' ');
     if (joined === 'rev-parse --show-toplevel') {
       return { stdout: '/repo\n', stderr: '' };
     }
     if (joined === 'rev-parse --abbrev-ref HEAD') {
-      return { stdout: 'main\n', stderr: '' };
+      return { stdout: `${branch}\n`, stderr: '' };
     }
     if (joined === 'diff --cached') {
       return { stdout: stagedDiff, stderr: '' };
@@ -31,7 +32,10 @@ function createGitMock(options?: { stagedDiff?: string }) {
     if (joined === 'add .') {
       return { stdout: '', stderr: '' };
     }
-    if (joined === 'push') {
+    if (joined.startsWith('checkout -b ')) {
+      return { stdout: '', stderr: '' };
+    }
+    if (joined === 'push' || joined === 'push -u origin HEAD') {
       return { stdout: '', stderr: '' };
     }
     return { stdout: '', stderr: '' };
@@ -40,13 +44,16 @@ function createGitMock(options?: { stagedDiff?: string }) {
   return { execFile, execFileWithStdin, cwd: '/repo' };
 }
 
+const fixedNow = () => new Date(2026, 10, 15, 15, 30, 45);
+const fixedRandomBytes = () => Buffer.from([0, 10, 25, 26, 27]);
+
 describe('runSubmit', () => {
   it('fails when not inside a git repository', async () => {
     const execFile = vi.fn().mockRejectedValue(new Error('fatal: not a git repository'));
     const error = vi.fn();
 
     const result = await runSubmit(
-      { add: false, push: false },
+      { add: false, push: false, protectMain: false },
       {
         git: { execFile },
         resolveConfigFn: () => baseConfig,
@@ -66,7 +73,7 @@ describe('runSubmit', () => {
     const error = vi.fn();
 
     const result = await runSubmit(
-      { add: false, push: false },
+      { add: false, push: false, protectMain: false },
       {
         git,
         resolveConfigFn: () => baseConfig,
@@ -87,7 +94,7 @@ describe('runSubmit', () => {
     const log = vi.fn();
 
     const result = await runSubmit(
-      { add: true, push: false },
+      { add: true, push: false, protectMain: false },
       {
         git,
         resolveConfigFn: () => baseConfig,
@@ -109,8 +116,118 @@ describe('runSubmit', () => {
     expect(git.execFile).not.toHaveBeenCalledWith('git', ['push'], expect.any(Object));
   });
 
+  it('on main with protectMain creates a feature branch then commits', async () => {
+    const git = createGitMock({ branch: 'main' });
+    const generate = vi.fn().mockResolvedValue('feat: protected');
+
+    const result = await runSubmit(
+      { add: false, push: false, protectMain: true },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: generate,
+        log: vi.fn(),
+        error: vi.fn(),
+        sleep: vi.fn(),
+        now: fixedNow,
+        randomBytes: fixedRandomBytes,
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(git.execFile).toHaveBeenCalledWith(
+      'git',
+      ['checkout', '-b', 'feature/20261115-153045-akz01'],
+      expect.any(Object),
+    );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({ branchName: 'feature/20261115-153045-akz01' }),
+      baseConfig,
+      undefined,
+    );
+  });
+
+  it('on main with protectMain and push uses push -u origin HEAD', async () => {
+    const git = createGitMock({ branch: 'master' });
+
+    const result = await runSubmit(
+      { add: false, push: true, protectMain: true },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: vi.fn().mockResolvedValue('feat: push feature'),
+        log: vi.fn(),
+        error: vi.fn(),
+        sleep: vi.fn(),
+        now: fixedNow,
+        randomBytes: fixedRandomBytes,
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(git.execFile).toHaveBeenCalledWith(
+      'git',
+      ['push', '-u', 'origin', 'HEAD'],
+      expect.any(Object),
+    );
+    expect(git.execFile).not.toHaveBeenCalledWith('git', ['push'], expect.any(Object));
+  });
+
+  it('does not create a feature branch when protectMain is false on main', async () => {
+    const git = createGitMock({ branch: 'main' });
+
+    const result = await runSubmit(
+      { add: false, push: true, protectMain: false },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: vi.fn().mockResolvedValue('feat: direct'),
+        log: vi.fn(),
+        error: vi.fn(),
+        sleep: vi.fn(),
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(git.execFile).not.toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '-b']),
+      expect.any(Object),
+    );
+    expect(git.execFile).toHaveBeenCalledWith('git', ['push'], expect.any(Object));
+  });
+
+  it('does not create a feature branch when already on a feature branch', async () => {
+    const git = createGitMock({ branch: 'feature/existing' });
+    const generate = vi.fn().mockResolvedValue('feat: keep');
+
+    const result = await runSubmit(
+      { add: false, push: false, protectMain: true },
+      {
+        git,
+        resolveConfigFn: () => baseConfig,
+        generateCommitMessageFn: generate,
+        log: vi.fn(),
+        error: vi.fn(),
+        sleep: vi.fn(),
+      },
+    );
+
+    expect(result.exitCode).toBe(0);
+    expect(git.execFile).not.toHaveBeenCalledWith(
+      'git',
+      expect.arrayContaining(['checkout', '-b']),
+      expect.any(Object),
+    );
+    expect(generate).toHaveBeenCalledWith(
+      expect.objectContaining({ branchName: 'feature/existing' }),
+      baseConfig,
+      undefined,
+    );
+  });
+
   it('retries push on network errors with exponential backoff then succeeds', async () => {
-    const git = createGitMock();
+    const git = createGitMock({ branch: 'feature/x' });
     let pushCalls = 0;
     git.execFile = vi.fn(async (_file: string, args: readonly string[]) => {
       const joined = args.join(' ');
@@ -118,7 +235,7 @@ describe('runSubmit', () => {
         return { stdout: '/repo\n', stderr: '' };
       }
       if (joined === 'rev-parse --abbrev-ref HEAD') {
-        return { stdout: 'main\n', stderr: '' };
+        return { stdout: 'feature/x\n', stderr: '' };
       }
       if (joined === 'diff --cached') {
         return { stdout: 'diff --git a/a.ts\n+line\n', stderr: '' };
@@ -140,7 +257,7 @@ describe('runSubmit', () => {
     const log = vi.fn();
 
     const result = await runSubmit(
-      { add: false, push: true },
+      { add: false, push: true, protectMain: true },
       {
         git,
         resolveConfigFn: () => baseConfig,
@@ -158,7 +275,7 @@ describe('runSubmit', () => {
   });
 
   it('does not retry git push on remote reject', async () => {
-    const git = createGitMock();
+    const git = createGitMock({ branch: 'feature/x' });
     let pushCalls = 0;
     git.execFile = vi.fn(async (_file: string, args: readonly string[]) => {
       const joined = args.join(' ');
@@ -166,7 +283,7 @@ describe('runSubmit', () => {
         return { stdout: '/repo\n', stderr: '' };
       }
       if (joined === 'rev-parse --abbrev-ref HEAD') {
-        return { stdout: 'main\n', stderr: '' };
+        return { stdout: 'feature/x\n', stderr: '' };
       }
       if (joined === 'diff --cached') {
         return { stdout: 'diff --git a/a.ts\n+line\n', stderr: '' };
@@ -185,7 +302,7 @@ describe('runSubmit', () => {
     const error = vi.fn();
 
     const result = await runSubmit(
-      { add: false, push: true },
+      { add: false, push: true, protectMain: false },
       {
         git,
         resolveConfigFn: () => baseConfig,
@@ -203,7 +320,7 @@ describe('runSubmit', () => {
   });
 
   it('retries LLM generation on network failure', async () => {
-    const git = createGitMock();
+    const git = createGitMock({ branch: 'feature/x' });
     const generate = vi
       .fn()
       .mockRejectedValueOnce(Object.assign(new TypeError('fetch failed'), { code: 'ECONNRESET' }))
@@ -211,7 +328,7 @@ describe('runSubmit', () => {
     const sleep = vi.fn().mockResolvedValue(undefined);
 
     const result = await runSubmit(
-      { add: false, push: false },
+      { add: false, push: false, protectMain: true },
       {
         git,
         resolveConfigFn: () => baseConfig,
@@ -228,7 +345,7 @@ describe('runSubmit', () => {
   });
 
   it('does not retry LLM generation on non-network API errors', async () => {
-    const git = createGitMock();
+    const git = createGitMock({ branch: 'feature/x' });
     const generate = vi
       .fn()
       .mockRejectedValue(new Error('LLM request failed with status 402: insufficient balance'));
@@ -236,7 +353,7 @@ describe('runSubmit', () => {
     const error = vi.fn();
 
     const result = await runSubmit(
-      { add: false, push: false },
+      { add: false, push: false, protectMain: true },
       {
         git,
         resolveConfigFn: () => baseConfig,

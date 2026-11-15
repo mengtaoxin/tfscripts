@@ -122,7 +122,8 @@ Usage:
 Runs the ai-git-submit flow for the settings entry whose folder name
 matches --name. Always non-interactive. Optional per-repo
 ai-git-submit-parameters (argv fragments such as "--add yes") are parsed
-like ai-git-submit flags; omitted --add/--push use ai-git-submit defaults.
+like ai-git-submit flags; omitted --add/--push/--protect-main use
+ai-git-submit defaults.
 
 For environment ssh, git runs on the remote host (key-based auth only);
 the LLM API uses AI_GIT_SUBMIT_* from the local process environment.

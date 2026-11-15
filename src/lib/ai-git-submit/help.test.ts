@@ -6,9 +6,12 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('ai-git-submit');
     expect(HELP_TEXT).toContain('--add');
     expect(HELP_TEXT).toContain('--push');
+    expect(HELP_TEXT).toContain('--protect-main');
     expect(HELP_TEXT).toContain('--no-input');
     expect(HELP_TEXT).toContain('Partial flags');
     expect(HELP_TEXT).toContain('git repository');
     expect(HELP_TEXT).toContain('AI_GIT_SUBMIT_');
+    expect(HELP_TEXT).toContain('main');
+    expect(HELP_TEXT).toContain('feature/');
   });
 });

@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { applySubmitDefaults, formatSubmitInvocation, promptSubmitOptions } from './prompts.js';
 
 describe('promptSubmitOptions', () => {
-  it('asks add then push with No as the default for both', async () => {
+  it('asks add, push, then protect-main with their defaults', async () => {
     const askAdd = vi.fn().mockResolvedValue(false);
     const askPush = vi.fn().mockResolvedValue(false);
+    const askProtectMain = vi.fn().mockResolvedValue(true);
 
-    const result = await promptSubmitOptions({}, { askAdd, askPush });
+    const result = await promptSubmitOptions({}, { askAdd, askPush, askProtectMain });
 
     expect(askAdd).toHaveBeenCalledWith({
       message: 'Run "git add ." before generating the commit message?',
@@ -24,32 +25,54 @@ describe('promptSubmitOptions', () => {
       ],
       default: false,
     });
-    expect(result).toEqual({ add: false, push: false });
+    expect(askProtectMain).toHaveBeenCalledWith({
+      message: 'Protect main/master by committing on a new feature branch?',
+      choices: [
+        { name: 'Yes', value: true },
+        { name: 'No', value: false },
+      ],
+      default: true,
+    });
+    expect(result).toEqual({ add: false, push: false, protectMain: true });
   });
 
   it('skips prompts for values already supplied by flags', async () => {
     const askAdd = vi.fn();
     const askPush = vi.fn().mockResolvedValue(true);
+    const askProtectMain = vi.fn();
 
-    const result = await promptSubmitOptions({ add: true }, { askAdd, askPush });
+    const result = await promptSubmitOptions(
+      { add: true, protectMain: false },
+      { askAdd, askPush, askProtectMain },
+    );
 
     expect(askAdd).not.toHaveBeenCalled();
     expect(askPush).toHaveBeenCalledOnce();
-    expect(result).toEqual({ add: true, push: true });
+    expect(askProtectMain).not.toHaveBeenCalled();
+    expect(result).toEqual({ add: true, push: true, protectMain: false });
   });
 });
 
 describe('applySubmitDefaults', () => {
-  it('fills omitted flags with no/no', () => {
-    expect(applySubmitDefaults({})).toEqual({ add: false, push: false });
-    expect(applySubmitDefaults({ add: true })).toEqual({ add: true, push: false });
+  it('fills omitted flags with no/no/yes', () => {
+    expect(applySubmitDefaults({})).toEqual({ add: false, push: false, protectMain: true });
+    expect(applySubmitDefaults({ add: true })).toEqual({
+      add: true,
+      push: false,
+      protectMain: true,
+    });
+    expect(applySubmitDefaults({ protectMain: false })).toEqual({
+      add: false,
+      push: false,
+      protectMain: false,
+    });
   });
 });
 
 describe('formatSubmitInvocation', () => {
   it('prints a non-interactive equivalent command line', () => {
-    expect(formatSubmitInvocation({ add: true, push: false })).toBe(
-      'ai-git-submit --add yes --push no',
+    expect(formatSubmitInvocation({ add: true, push: false, protectMain: true })).toBe(
+      'ai-git-submit --add yes --push no --protect-main yes',
     );
   });
 });

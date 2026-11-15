@@ -30,5 +30,6 @@ describe('helpTextFor', () => {
     expect(HELP_LIST).toContain('-scc');
     expect(HELP_SUBMIT).toContain('repos submit --name');
     expect(HELP_SUBMIT).toContain('ai-git-submit');
+    expect(HELP_SUBMIT).toContain('--protect-main');
   });
 });

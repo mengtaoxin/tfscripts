@@ -1,7 +1,12 @@
 import { parseArgs as parseAiGitSubmitArgs } from '../ai-git-submit/parse-args.js';
 
 export type ParsedSubmitParameters =
-  | { ok: true; add: boolean | undefined; push: boolean | undefined }
+  | {
+      ok: true;
+      add: boolean | undefined;
+      push: boolean | undefined;
+      protectMain: boolean | undefined;
+    }
   | { ok: false; message: string };
 
 export function flattenAiGitSubmitParameters(parameters: readonly string[] | undefined): string[] {
@@ -30,5 +35,6 @@ export function parseSubmitParameters(
     ok: true,
     add: parsed.add,
     push: parsed.push,
+    protectMain: parsed.protectMain,
   };
 }

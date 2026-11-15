@@ -53,6 +53,7 @@ export async function submitOne(entry: RepoEntry, deps: SubmitOneDeps = {}): Pro
     {
       add: parsed.add,
       push: parsed.push,
+      protectMain: parsed.protectMain,
       noInput: true,
     },
     {

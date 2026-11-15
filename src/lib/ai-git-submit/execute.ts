@@ -8,11 +8,12 @@ import {
   type PromptSubmitOptionsDeps,
   type PromptSubmitPresets,
 } from './prompts.js';
-import { runSubmit, type RunSubmitDeps, type RunSubmitResult } from './run.js';
+import { runSubmit, type RunSubmitDeps, type RunSubmitResult, type SubmitOptions } from './run.js';
 
 export interface ExecuteSubmitInput {
   readonly add?: boolean | undefined;
   readonly push?: boolean | undefined;
+  readonly protectMain?: boolean | undefined;
   readonly noInput: boolean;
 }
 
@@ -22,11 +23,8 @@ export interface ExecuteSubmitDeps {
   readonly promptSubmitOptionsFn?: (
     presets?: PromptSubmitPresets,
     promptDeps?: PromptSubmitOptionsDeps,
-  ) => Promise<{ add: boolean; push: boolean }>;
-  readonly runSubmitFn?: (
-    options: { add: boolean; push: boolean },
-    deps?: RunSubmitDeps,
-  ) => Promise<RunSubmitResult>;
+  ) => Promise<SubmitOptions>;
+  readonly runSubmitFn?: (options: SubmitOptions, deps?: RunSubmitDeps) => Promise<RunSubmitResult>;
   readonly runSubmitDeps?: RunSubmitDeps;
   readonly error?: (message: string) => void;
   readonly isTTY?: boolean;
@@ -47,12 +45,17 @@ export async function executeSubmit(
     return 1;
   }
 
-  const presets: PromptSubmitPresets = { add: input.add, push: input.push };
+  const presets: PromptSubmitPresets = {
+    add: input.add,
+    push: input.push,
+    protectMain: input.protectMain,
+  };
   const promptFn = deps.promptSubmitOptionsFn ?? promptSubmitOptions;
 
   const resolved = await resolveInteractiveOptions({
     noInput: input.noInput,
-    needsPrompt: presets.add === undefined || presets.push === undefined,
+    needsPrompt:
+      presets.add === undefined || presets.push === undefined || presets.protectMain === undefined,
     prompt: () => promptFn(presets),
     applyDefaults: () => applySubmitDefaults(presets),
     formatInvocation: formatSubmitInvocation,

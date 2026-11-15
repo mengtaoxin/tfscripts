@@ -18,11 +18,18 @@ describe('flattenAiGitSubmitParameters', () => {
 });
 
 describe('parseSubmitParameters', () => {
-  it('parses add and push from settings fragments', () => {
+  it('parses add, push, and protect-main from settings fragments', () => {
     expect(parseSubmitParameters(['--add yes', '--push no'])).toEqual({
       ok: true,
       add: true,
       push: false,
+      protectMain: undefined,
+    });
+    expect(parseSubmitParameters(['--protect-main no', '--push yes'])).toEqual({
+      ok: true,
+      add: undefined,
+      push: true,
+      protectMain: false,
     });
   });
 
@@ -31,6 +38,7 @@ describe('parseSubmitParameters', () => {
       ok: true,
       add: undefined,
       push: undefined,
+      protectMain: undefined,
     });
   });
 

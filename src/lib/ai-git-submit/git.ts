@@ -44,6 +44,13 @@ export async function getStagedStat(deps: GitDeps = defaultDeps): Promise<string
   return stdout;
 }
 
+export async function gitCheckoutNewBranch(
+  branchName: string,
+  deps: GitDeps = defaultDeps,
+): Promise<void> {
+  await execGit(deps, ['checkout', '-b', branchName]);
+}
+
 export async function gitCommitWithMessage(
   message: string,
   deps: GitDeps = defaultDeps,
@@ -52,6 +59,17 @@ export async function gitCommitWithMessage(
   await execWithStdin('git', ['commit', '-F', '-'], message, { cwd: deps.cwd });
 }
 
-export async function gitPush(deps: GitDeps = defaultDeps): Promise<void> {
+export interface GitPushOptions {
+  readonly setUpstream?: boolean;
+}
+
+export async function gitPush(
+  deps: GitDeps = defaultDeps,
+  options: GitPushOptions = {},
+): Promise<void> {
+  if (options.setUpstream) {
+    await execGit(deps, ['push', '-u', 'origin', 'HEAD']);
+    return;
+  }
   await execGit(deps, ['push']);
 }
