@@ -75,8 +75,8 @@ Usage:
   repos help check
   repos check --help
 
-Fetches and shows a status table: remote-behind commits, local-ahead
-commits, and uncommitted dirty line counts. Does not merge.
+Fetches and shows a status table: current branch, remote-behind commits,
+local-ahead commits, and uncommitted dirty line counts. Does not merge.
 
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).

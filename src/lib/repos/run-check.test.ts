@@ -74,9 +74,9 @@ describe('runRepoCheck', () => {
     ]);
     expect(endProgress).toHaveBeenCalledOnce();
     expect(lines).toEqual([
-      'REPO    REMOTE  LOCAL AHEAD  DIRTY LINES',
-      'repo-1  -       -            -',
-      'repo-2  2       1            5',
+      'REPO    BRANCH   REMOTE  LOCAL AHEAD  DIRTY LINES',
+      'repo-1  main     -       -            -',
+      'repo-2  develop  2       1            5',
     ]);
   });
 

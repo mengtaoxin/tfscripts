@@ -137,10 +137,30 @@ describe('format', () => {
     ];
 
     expect(formatCheckTable(results)).toEqual([
-      'REPO          REMOTE  LOCAL AHEAD  DIRTY LINES',
-      'repo-1        -       -            -',
-      'my-long-repo  3       1            12',
-      'repo-3        ✗ failed: current branch has no upstream',
+      'REPO          BRANCH     REMOTE  LOCAL AHEAD  DIRTY LINES',
+      'repo-1        main       -       -            -',
+      'my-long-repo  feature/x  3       1            12',
+      'repo-3        develop    ✗ failed: current branch has no upstream',
+    ]);
+  });
+
+  it('formats a check table with a dash when branch is unknown', () => {
+    const results: CheckOneResult[] = [
+      {
+        name: 'repo-1',
+        path: '/r/repo-1',
+        branch: '',
+        status: 'failed',
+        remoteBehind: 0,
+        localAhead: 0,
+        dirtyLines: 0,
+        reason: 'path does not exist: /r/repo-1',
+      },
+    ];
+
+    expect(formatCheckTable(results)).toEqual([
+      'REPO    BRANCH  REMOTE  LOCAL AHEAD  DIRTY LINES',
+      'repo-1  -       ✗ failed: path does not exist: /r/repo-1',
     ]);
   });
 });

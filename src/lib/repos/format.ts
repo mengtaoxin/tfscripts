@@ -22,7 +22,7 @@ export function statusLabel(status: SyncStatus): string {
   }
 }
 
-function branchText(result: SyncOneResult): string {
+function branchText(result: { readonly branch: string }): string {
   return result.branch || '-';
 }
 
@@ -116,11 +116,13 @@ export function formatListTable(
 
 export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
   let nameWidth = HEADER_REPO.length;
+  let branchWidth = HEADER_BRANCH.length;
   let remoteWidth = HEADER_REMOTE.length;
   let aheadWidth = HEADER_LOCAL_AHEAD.length;
 
   for (const result of results) {
     nameWidth = Math.max(nameWidth, result.name.length);
+    branchWidth = Math.max(branchWidth, branchText(result).length);
     if (result.status === 'ok') {
       remoteWidth = Math.max(remoteWidth, countOrDash(result.remoteBehind).length);
       aheadWidth = Math.max(aheadWidth, countOrDash(result.localAhead).length);
@@ -129,6 +131,7 @@ export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
 
   const header = [
     pad(HEADER_REPO, nameWidth),
+    pad(HEADER_BRANCH, branchWidth),
     pad(HEADER_REMOTE, remoteWidth),
     pad(HEADER_LOCAL_AHEAD, aheadWidth),
     HEADER_DIRTY_LINES,
@@ -137,10 +140,15 @@ export function formatCheckTable(results: readonly CheckOneResult[]): string[] {
   const rows = results.map((result) => {
     if (result.status === 'failed') {
       const reason = result.reason ? `: ${result.reason}` : '';
-      return `${pad(result.name, nameWidth)}${COLUMN_GAP}✗ failed${reason}`;
+      return [
+        pad(result.name, nameWidth),
+        pad(branchText(result), branchWidth),
+        `✗ failed${reason}`,
+      ].join(COLUMN_GAP);
     }
     return [
       pad(result.name, nameWidth),
+      pad(branchText(result), branchWidth),
       pad(countOrDash(result.remoteBehind), remoteWidth),
       pad(countOrDash(result.localAhead), aheadWidth),
       countOrDash(result.dirtyLines),
