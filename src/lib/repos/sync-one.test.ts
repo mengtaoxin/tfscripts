@@ -15,7 +15,7 @@ function createExecFile(handler: (joined: string) => { stdout: string; stderr: s
 }
 
 describe('syncOne', () => {
-  const entry = { name: 'repo-1', path: '/repos/repo-1' };
+  const entry = { name: 'repo-1', path: '/repos/repo-1', environment: 'local' as const };
 
   it('reports up-to-date when not behind after fetch', async () => {
     const execFile = createExecFile((joined) => {
@@ -239,6 +239,29 @@ describe('syncOne', () => {
     expect(result).toMatchObject({
       status: 'failed',
       reason: 'path does not exist: /repos/repo-1',
+    });
+  });
+
+  it('reports SSH fingerprint failures as a per-repo failed row reason', async () => {
+    const { SSH_FINGERPRINT_REASON } = await import('./ssh.js');
+    const result = await syncOne(
+      {
+        name: 'remote-repo',
+        path: '~/code/remote-repo',
+        environment: 'ssh',
+        sshHost: 'devbox',
+      },
+      {
+        resolveRemoteHome: async () => {
+          throw new Error(SSH_FINGERPRINT_REASON);
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      name: 'remote-repo',
+      status: 'failed',
+      reason: SSH_FINGERPRINT_REASON,
     });
   });
 });

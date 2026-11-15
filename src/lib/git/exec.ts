@@ -6,7 +6,7 @@ const execFileAsync = promisify(execFile);
 export type ExecFileFn = (
   file: string,
   args: readonly string[],
-  options?: { cwd?: string; maxBuffer?: number },
+  options?: { cwd?: string; maxBuffer?: number; env?: NodeJS.ProcessEnv },
 ) => Promise<{ stdout: string; stderr: string }>;
 
 export type ExecFileWithStdinFn = (
@@ -30,6 +30,7 @@ export const defaultExecFile: ExecFileFn = async (file, args, options) =>
     cwd: options?.cwd,
     maxBuffer: options?.maxBuffer ?? 10 * 1024 * 1024,
     encoding: 'utf8',
+    env: options?.env,
   });
 
 export const defaultExecFileWithStdin: ExecFileWithStdinFn = (file, args, stdin, options) =>

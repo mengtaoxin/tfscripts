@@ -88,6 +88,54 @@ describe('runRepoSync', () => {
     expect(exit.exitCode).toBe(1);
   });
 
+  it('keeps processing other repos when one SSH repo fails', async () => {
+    const lines: string[] = [];
+    const { SSH_FINGERPRINT_REASON } = await import('./ssh.js');
+
+    const exit = await runRepoSync({
+      loadSettings: () => ({
+        repos: [
+          {
+            name: 'remote-repo',
+            path: '~/remote',
+            environment: 'ssh',
+            sshHost: 'devbox',
+          },
+          { name: 'local-repo', path: '/a', environment: 'local' },
+        ],
+      }),
+      syncOne: async (entry) => {
+        if (entry.name === 'remote-repo') {
+          return {
+            name: entry.name,
+            path: entry.path,
+            branch: '',
+            status: 'failed',
+            reason: SSH_FINGERPRINT_REASON,
+          };
+        }
+        return {
+          name: entry.name,
+          path: entry.path,
+          branch: 'main',
+          status: 'up-to-date',
+        };
+      },
+      log: (line) => lines.push(line),
+      setProgress: vi.fn(),
+      endProgress: vi.fn(),
+      error: vi.fn(),
+    });
+
+    expect(exit.exitCode).toBe(1);
+    expect(lines).toEqual([
+      'REPO         BRANCH  STATUS',
+      `remote-repo  -       ✗ failed: ${SSH_FINGERPRINT_REASON}`,
+      'local-repo   main    ✓ up to date',
+      'Summary: 2 repos / 1 up to date / 0 updated / 1 failed',
+    ]);
+  });
+
   it('prints config errors and exits 1', async () => {
     const error = vi.fn();
     const exit = await runRepoSync({

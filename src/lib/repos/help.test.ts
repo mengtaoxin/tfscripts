@@ -10,6 +10,8 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('repos check');
     expect(HELP_TEXT).toContain('repos list');
     expect(HELP_TEXT).toContain('repos help update');
+    expect(HELP_TEXT).toContain('"environment": "ssh"');
+    expect(HELP_TEXT).toContain('"ssh-host": "devbox"');
   });
 });
 

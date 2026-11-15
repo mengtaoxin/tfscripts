@@ -15,7 +15,7 @@ function createExecFile(handler: (joined: string) => { stdout: string; stderr: s
 }
 
 describe('checkOne', () => {
-  const entry = { name: 'repo-1', path: '/repos/repo-1' };
+  const entry = { name: 'repo-1', path: '/repos/repo-1', environment: 'local' as const };
 
   it('reports behind, ahead, and dirty line counts after fetch', async () => {
     const execFile = createExecFile((joined) => {
@@ -129,6 +129,29 @@ describe('checkOne', () => {
       branch: 'main',
       status: 'failed',
       reason: 'current branch has no upstream',
+    });
+  });
+
+  it('reports SSH fingerprint failures as a per-repo failed row reason', async () => {
+    const { SSH_FINGERPRINT_REASON } = await import('./ssh.js');
+    const result = await checkOne(
+      {
+        name: 'remote-repo',
+        path: '~/code/remote-repo',
+        environment: 'ssh',
+        sshHost: 'devbox',
+      },
+      {
+        resolveRemoteHome: async () => {
+          throw new Error(SSH_FINGERPRINT_REASON);
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      name: 'remote-repo',
+      status: 'failed',
+      reason: SSH_FINGERPRINT_REASON,
     });
   });
 });

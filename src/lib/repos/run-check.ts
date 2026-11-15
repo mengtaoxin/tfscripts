@@ -1,4 +1,9 @@
-import { defaultSettingsPath, loadSettings, type RepoSyncSettings } from './config.js';
+import {
+  defaultSettingsPath,
+  loadSettings,
+  type RepoEntry,
+  type RepoSyncSettings,
+} from './config.js';
 import { checkOne, type CheckOneResult } from './check-one.js';
 import { formatCheckTable, formatProgressLine } from './format.js';
 import { mapPool } from './pool.js';
@@ -9,7 +14,7 @@ export const DEFAULT_CONCURRENCY = 3;
 export interface RunRepoCheckDeps {
   settingsPath?: string;
   loadSettings?: (path: string) => RepoSyncSettings;
-  checkOne?: (entry: { name: string; path: string }) => Promise<CheckOneResult>;
+  checkOne?: (entry: RepoEntry) => Promise<CheckOneResult>;
   concurrency?: number;
   log?: (line: string) => void;
   error?: (line: string) => void;
@@ -38,7 +43,8 @@ export async function runRepoCheck(deps: RunRepoCheckDeps = {}): Promise<RunRepo
   const progress = resolveProgress(deps);
   const settingsPath = deps.settingsPath ?? defaultSettingsPath();
   const load = deps.loadSettings ?? ((path) => loadSettings({ settingsPath: path }));
-  const check = deps.checkOne ?? ((entry) => checkOne(entry));
+  const remoteHomeCache = new Map<string, string>();
+  const check = deps.checkOne ?? ((entry) => checkOne(entry, { remoteHomeCache }));
   const concurrency = deps.concurrency ?? DEFAULT_CONCURRENCY;
 
   let settings: RepoSyncSettings;

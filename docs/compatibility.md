@@ -42,7 +42,7 @@ Calls `git` through `execFile` (`src/lib/ai-git-submit/git.ts`) and an HTTPS LLM
 
 ### `repos`
 
-Calls `git` through `execFile` (`src/lib/repos/git.ts`). Settings live at `~/.tfscripts/repos/settings.json`. Paths in settings may use `~`. Works on any OS where Node and `git` work; behavior is the same across macOS and Linux.
+Calls `git` through `execFile` (`src/lib/repos/git.ts`). Settings live at `~/.tfscripts/repos/settings.json`. Paths in settings may use `~`. Per-repo `environment` / `ssh-host` (siblings of `path`) can run git over `ssh` with BatchMode key-only auth; that needs an `ssh` client on `PATH` and a matching `~/.ssh/config` host. Works on any OS where Node and `git` work; SSH mode additionally needs OpenSSH-compatible `ssh`.
 
 ### `open-in-vscode`
 

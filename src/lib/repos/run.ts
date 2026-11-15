@@ -1,4 +1,9 @@
-import { defaultSettingsPath, loadSettings, type RepoSyncSettings } from './config.js';
+import {
+  defaultSettingsPath,
+  loadSettings,
+  type RepoEntry,
+  type RepoSyncSettings,
+} from './config.js';
 import { formatProgressLine, formatResultTable, formatSummary } from './format.js';
 import { mapPool } from './pool.js';
 import { createStdoutProgress, type ProgressWriter } from './progress.js';
@@ -9,7 +14,7 @@ export const DEFAULT_CONCURRENCY = 3;
 export interface RunRepoSyncDeps {
   settingsPath?: string;
   loadSettings?: (path: string) => RepoSyncSettings;
-  syncOne?: (entry: { name: string; path: string }) => Promise<SyncOneResult>;
+  syncOne?: (entry: RepoEntry) => Promise<SyncOneResult>;
   concurrency?: number;
   log?: (line: string) => void;
   error?: (line: string) => void;
@@ -38,7 +43,8 @@ export async function runRepoSync(deps: RunRepoSyncDeps = {}): Promise<RunRepoSy
   const progress = resolveProgress(deps);
   const settingsPath = deps.settingsPath ?? defaultSettingsPath();
   const load = deps.loadSettings ?? ((path) => loadSettings({ settingsPath: path }));
-  const sync = deps.syncOne ?? ((entry) => syncOne(entry));
+  const remoteHomeCache = new Map<string, string>();
+  const sync = deps.syncOne ?? ((entry) => syncOne(entry, { remoteHomeCache }));
   const concurrency = deps.concurrency ?? DEFAULT_CONCURRENCY;
 
   let settings: RepoSyncSettings;

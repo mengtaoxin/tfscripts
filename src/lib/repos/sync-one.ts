@@ -1,4 +1,3 @@
-import { access } from 'node:fs/promises';
 import type { RepoEntry } from './config.js';
 import { fetchWithRetry, type FetchWithRetryDeps } from './fetch-retry.js';
 import {
@@ -15,6 +14,7 @@ import {
   stashPush,
   type GitDeps,
 } from './git.js';
+import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
 
 export type SyncStatus = 'up-to-date' | 'updated' | 'failed';
 
@@ -26,7 +26,7 @@ export interface SyncOneResult {
   reason?: string;
 }
 
-export interface SyncOneDeps extends FetchWithRetryDeps {
+export interface SyncOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   git?: GitDeps;
   accessPath?: (path: string) => Promise<void>;
 }
@@ -55,33 +55,43 @@ function failResult(entry: RepoEntry, branch: string, reason: string): SyncOneRe
 }
 
 export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise<SyncOneResult> {
-  const accessPath = deps.accessPath ?? ((path) => access(path));
-  const git: GitDeps = { ...deps.git, cwd: deps.git?.cwd ?? entry.path };
   let branch = '';
+  let working = entry;
+  let git: GitDeps;
+  let accessPath: (path: string) => Promise<void>;
 
   try {
-    await ensurePathExists(entry.path, accessPath);
+    const resolved = await resolveRepoTarget(entry, deps);
+    working = resolved.entry;
+    git = resolved.git;
+    accessPath = resolved.accessPath;
   } catch (error) {
     return failResult(entry, branch, errorMessage(error));
   }
 
   try {
+    await ensurePathExists(working.path, accessPath);
+  } catch (error) {
+    return failResult(working, branch, errorMessage(error));
+  }
+
+  try {
     branch = await getBranchName(git);
   } catch (error) {
-    return failResult(entry, branch, `not a git repository: ${errorMessage(error)}`);
+    return failResult(working, branch, `not a git repository: ${errorMessage(error)}`);
   }
 
   try {
     await getUpstreamRef(git);
   } catch {
-    return failResult(entry, branch, 'current branch has no upstream');
+    return failResult(working, branch, 'current branch has no upstream');
   }
 
   try {
     await fetchWithRetry(git, deps);
   } catch (error) {
     return failResult(
-      entry,
+      working,
       branch,
       isNetworkError(error) ? `network error: ${errorMessage(error)}` : errorMessage(error),
     );
@@ -91,13 +101,13 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
   try {
     behind = await countBehindUpstream(git);
   } catch (error) {
-    return failResult(entry, branch, errorMessage(error));
+    return failResult(working, branch, errorMessage(error));
   }
 
   if (behind === 0) {
     return {
-      name: entry.name,
-      path: entry.path,
+      name: working.name,
+      path: working.path,
       branch,
       status: 'up-to-date',
     };
@@ -127,7 +137,7 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
             // leave stash if pop fails after abort
           }
         }
-        return failResult(entry, branch, 'local and remote conflict');
+        return failResult(working, branch, 'local and remote conflict');
       }
       throw error;
     }
@@ -137,19 +147,23 @@ export async function syncOne(entry: RepoEntry, deps: SyncOneDeps = {}): Promise
         await stashPop(git);
       } catch (error) {
         if (isConflictError(error)) {
-          return failResult(entry, branch, 'local and remote conflict');
+          return failResult(working, branch, 'local and remote conflict');
         }
-        return failResult(entry, branch, `failed to restore local changes: ${errorMessage(error)}`);
+        return failResult(
+          working,
+          branch,
+          `failed to restore local changes: ${errorMessage(error)}`,
+        );
       }
     }
 
     return {
-      name: entry.name,
-      path: entry.path,
+      name: working.name,
+      path: working.path,
       branch,
       status: 'updated',
     };
   } catch (error) {
-    return failResult(entry, branch, errorMessage(error));
+    return failResult(working, branch, errorMessage(error));
   }
 }

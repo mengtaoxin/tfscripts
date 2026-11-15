@@ -1,4 +1,3 @@
-import { access } from 'node:fs/promises';
 import type { RepoEntry } from './config.js';
 import { fetchWithRetry, type FetchWithRetryDeps } from './fetch-retry.js';
 import {
@@ -11,6 +10,7 @@ import {
   isNetworkError,
   type GitDeps,
 } from './git.js';
+import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
 
 export type CheckStatus = 'ok' | 'failed';
 
@@ -25,7 +25,7 @@ export interface CheckOneResult {
   reason?: string;
 }
 
-export interface CheckOneDeps extends FetchWithRetryDeps {
+export interface CheckOneDeps extends FetchWithRetryDeps, ResolveRepoTargetDeps {
   git?: GitDeps;
   accessPath?: (path: string) => Promise<void>;
 }
@@ -55,33 +55,43 @@ function failResult(entry: RepoEntry, branch: string, reason: string): CheckOneR
 }
 
 export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promise<CheckOneResult> {
-  const accessPath = deps.accessPath ?? ((path) => access(path));
-  const git: GitDeps = { ...deps.git, cwd: deps.git?.cwd ?? entry.path };
   let branch = '';
+  let working = entry;
+  let git: GitDeps;
+  let accessPath: (path: string) => Promise<void>;
 
   try {
-    await ensurePathExists(entry.path, accessPath);
+    const resolved = await resolveRepoTarget(entry, deps);
+    working = resolved.entry;
+    git = resolved.git;
+    accessPath = resolved.accessPath;
   } catch (error) {
     return failResult(entry, branch, errorMessage(error));
   }
 
   try {
+    await ensurePathExists(working.path, accessPath);
+  } catch (error) {
+    return failResult(working, branch, errorMessage(error));
+  }
+
+  try {
     branch = await getBranchName(git);
   } catch (error) {
-    return failResult(entry, branch, `not a git repository: ${errorMessage(error)}`);
+    return failResult(working, branch, `not a git repository: ${errorMessage(error)}`);
   }
 
   try {
     await getUpstreamRef(git);
   } catch {
-    return failResult(entry, branch, 'current branch has no upstream');
+    return failResult(working, branch, 'current branch has no upstream');
   }
 
   try {
     await fetchWithRetry(git, deps);
   } catch (error) {
     return failResult(
-      entry,
+      working,
       branch,
       isNetworkError(error) ? `network error: ${errorMessage(error)}` : errorMessage(error),
     );
@@ -95,8 +105,8 @@ export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promi
     ]);
 
     return {
-      name: entry.name,
-      path: entry.path,
+      name: working.name,
+      path: working.path,
       branch,
       status: 'ok',
       remoteBehind,
@@ -104,6 +114,6 @@ export async function checkOne(entry: RepoEntry, deps: CheckOneDeps = {}): Promi
       dirtyLines,
     };
   } catch (error) {
-    return failResult(entry, branch, errorMessage(error));
+    return failResult(working, branch, errorMessage(error));
   }
 }

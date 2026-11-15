@@ -1,4 +1,3 @@
-import { access } from 'node:fs/promises';
 import {
   defaultSettingsPath,
   loadSettings,
@@ -8,10 +7,11 @@ import {
 import { formatListTable } from './format.js';
 import { countCommitsSince as countCommitsSinceGit, type GitDeps } from './git.js';
 import { mapPool } from './pool.js';
+import { resolveRepoTarget, type ResolveRepoTargetDeps } from './repo-target.js';
 
 export const DEFAULT_LIST_CONCURRENCY = 3;
 
-export interface RunRepoListDeps {
+export interface RunRepoListDeps extends ResolveRepoTargetDeps {
   settingsPath?: string;
   loadSettings?: (path: string) => RepoSyncSettings;
   showCommitCountDays?: number;
@@ -30,17 +30,16 @@ export interface RunRepoListResult {
 async function defaultCountCommitsSince(
   entry: RepoEntry,
   days: number,
-  deps: { git?: GitDeps; accessPath?: (path: string) => Promise<void> },
+  deps: ResolveRepoTargetDeps,
 ): Promise<number | null> {
-  const accessPath = deps.accessPath ?? ((path) => access(path));
   try {
-    await accessPath(entry.path);
-  } catch {
-    return null;
-  }
-
-  try {
-    return await countCommitsSinceGit({ ...deps.git, cwd: entry.path }, days);
+    const resolved = await resolveRepoTarget(entry, deps);
+    try {
+      await resolved.accessPath(resolved.entry.path);
+    } catch {
+      return null;
+    }
+    return await countCommitsSinceGit(resolved.git, days);
   } catch {
     return null;
   }
@@ -68,10 +67,17 @@ export async function runRepoList(deps: RunRepoListDeps = {}): Promise<RunRepoLi
     return { exitCode: 0 };
   }
 
+  const remoteHomeCache = deps.remoteHomeCache ?? new Map<string, string>();
+  const targetDeps: ResolveRepoTargetDeps = {
+    git: deps.git,
+    accessPath: deps.accessPath,
+    execFile: deps.execFile,
+    resolveRemoteHome: deps.resolveRemoteHome,
+    remoteHomeCache,
+  };
   const count =
     deps.countCommitsSince ??
-    ((entry, showDays) =>
-      defaultCountCommitsSince(entry, showDays, { git: deps.git, accessPath: deps.accessPath }));
+    ((entry, showDays) => defaultCountCommitsSince(entry, showDays, targetDeps));
   const concurrency = deps.concurrency ?? DEFAULT_LIST_CONCURRENCY;
 
   const commitCounts = await mapPool(settings.repos, concurrency, async (entry) =>
