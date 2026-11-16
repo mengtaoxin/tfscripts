@@ -99,7 +99,7 @@ describe('runOpen', () => {
 
     expect(result).toEqual({ exitCode: 1 });
     expect(spawn).not.toHaveBeenCalled();
-    expect(error).toHaveBeenCalledWith(expect.stringMatching(/Invalid JSON/));
+    expect(error).toHaveBeenCalledWith(expect.stringMatching(/Invalid YAML/));
   });
 
   it('propagates a non-zero exit code from code', async () => {

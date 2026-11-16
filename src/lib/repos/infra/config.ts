@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { homedir } from 'node:os';
+import { parse as parseYaml } from 'yaml';
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -37,7 +38,7 @@ export interface RepoSyncSettings {
 }
 
 export function defaultSettingsPath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'repos', 'settings.json');
+  return join(home, '.tfscripts', 'repos', 'settings.yml');
 }
 
 function expandHome(path: string, home: string): string {
@@ -158,7 +159,7 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
   } catch (error) {
     if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') {
       throw new ConfigError(
-        `Settings file not found: ${deps.settingsPath}. Create ~/.tfscripts/repos/settings.json with a "repos" list.`,
+        `Settings file not found: ${deps.settingsPath}. Create ~/.tfscripts/repos/settings.yml with a "repos" list.`,
       );
     }
     throw error;
@@ -166,9 +167,9 @@ export function loadSettings(deps: LoadSettingsDeps): RepoSyncSettings {
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw) as unknown;
+    parsed = parseYaml(raw) as unknown;
   } catch {
-    throw new ConfigError(`Invalid JSON in settings file: ${deps.settingsPath}`);
+    throw new ConfigError(`Invalid YAML in settings file: ${deps.settingsPath}`);
   }
 
   if (parsed === null || typeof parsed !== 'object' || !('repos' in parsed)) {

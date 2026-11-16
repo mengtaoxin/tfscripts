@@ -4,13 +4,14 @@ Runtime and tooling for this repo. Script names: [commands.md](commands.md). Lay
 
 ## Runtime
 
-| Piece       | Choice                                                           |
-| ----------- | ---------------------------------------------------------------- |
-| Language    | TypeScript (`strict`, `module` / `moduleResolution`: `NodeNext`) |
-| Module      | ESM (`"type": "module"`); imports use `.js` suffixes             |
-| Node        | 22+ (`engines.node` in `package.json`)                           |
-| CLI prompts | `@inquirer/prompts`                                              |
-| Env loading | `dotenv` (repo `.env` for `ai-git-submit`)                       |
+| Piece       | Choice                                                                |
+| ----------- | --------------------------------------------------------------------- |
+| Language    | TypeScript (`strict`, `module` / `moduleResolution`: `NodeNext`)      |
+| Module      | ESM (`"type": "module"`); imports use `.js` suffixes                  |
+| Node        | 22+ (`engines.node` in `package.json`)                                |
+| CLI prompts | `@inquirer/prompts`                                                   |
+| Env loading | `dotenv` (repo `.env` for `ai-git-submit`)                            |
+| YAML parse  | `yaml` (human-editable `settings.yml` for `repos` / `open-in-vscode`) |
 
 Compile with `tsc` (`tsconfig.json`: `rootDir` `src`, `outDir` `dist`). Test files are excluded from emit.
 

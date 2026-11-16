@@ -36,12 +36,12 @@ When the tree needs formatting, run `npm run format` first, then `npm run verify
 
 Paths and shapes live in source; do not duplicate them here.
 
-| CLI              | Config / state source                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------- |
-| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)); loader `src/lib/ai-git-submit/config.ts`       |
-| `repos`          | `~/.tfscripts/repos/settings.json` (`infra/config.ts`); remote-op state `state.json` (`infra/state.ts`) |
-| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.json` (`src/lib/open-in-vscode/config.ts`)                        |
-| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` (`src/lib/keep-awake/state.ts`)                                   |
+| CLI              | Config / state source                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------ |
+| `ai-git-submit`  | Repo `.env` (keys in [`.env.example`](../.env.example)); loader `src/lib/ai-git-submit/config.ts`      |
+| `repos`          | `~/.tfscripts/repos/settings.yml` (`infra/config.ts`); remote-op state `state.json` (`infra/state.ts`) |
+| `open-in-vscode` | `~/.tfscripts/open-in-vscode/settings.yml` (`src/lib/open-in-vscode/config.ts`)                        |
+| `keep-awake`     | `~/.tfscripts/keep-awake/status.json` (`src/lib/keep-awake/state.ts`)                                  |
 
 CLIs that use `runCliMain` share `~/.tfscripts/run.lock` (`src/lib/cli/run-lock.ts`); help requests skip the lock. `hello` is a smoke entry and does not use `runCliMain`.
 

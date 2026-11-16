@@ -34,12 +34,12 @@ print -r -- ${_comps[repos]}
 
 `repos` is registered in both scripts:
 
-| Input                       | Tab result                                         |
-| --------------------------- | -------------------------------------------------- |
-| `repos <Tab>`               | `update` `check` `list` `submit` `help`            |
-| `repos help <Tab>`          | action topics                                      |
-| `repos submit <Tab>`        | `--name`                                           |
-| `repos submit --name <Tab>` | repo names from `~/.tfscripts/repos/settings.json` |
+| Input                       | Tab result                                        |
+| --------------------------- | ------------------------------------------------- |
+| `repos <Tab>`               | `update` `check` `list` `submit` `help`           |
+| `repos help <Tab>`          | action topics                                     |
+| `repos submit <Tab>`        | `--name`                                          |
+| `repos submit --name <Tab>` | repo names from `~/.tfscripts/repos/settings.yml` |
 
 ## Protocol (for new commands)
 

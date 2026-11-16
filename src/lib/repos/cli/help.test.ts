@@ -4,18 +4,18 @@ import { HELP_CHECK, HELP_LIST, HELP_SUBMIT, HELP_TEXT, HELP_UPDATE, helpTextFor
 describe('HELP_TEXT', () => {
   it('mentions the command name, config path, and subcommands', () => {
     expect(HELP_TEXT).toContain('repos');
-    expect(HELP_TEXT).toContain('~/.tfscripts/repos/settings.json');
+    expect(HELP_TEXT).toContain('~/.tfscripts/repos/settings.yml');
     expect(HELP_TEXT).toContain('repos --help');
     expect(HELP_TEXT).toContain('repos update');
     expect(HELP_TEXT).toContain('repos check');
     expect(HELP_TEXT).toContain('repos list');
     expect(HELP_TEXT).toContain('repos submit');
     expect(HELP_TEXT).toContain('repos help update');
-    expect(HELP_TEXT).toContain('"environment": "ssh"');
-    expect(HELP_TEXT).toContain('"ssh-host": "devbox"');
+    expect(HELP_TEXT).toContain('environment: ssh');
+    expect(HELP_TEXT).toContain('ssh-host: devbox');
     expect(HELP_TEXT).toContain('ai-git-submit-parameters');
     expect(HELP_TEXT).toContain('after-update-commands');
-    expect(HELP_TEXT).toContain('"name": "local-tfscripts"');
+    expect(HELP_TEXT).toContain('name: local-tfscripts');
     expect(HELP_TEXT).toContain('list.show-commit-count');
     expect(HELP_TEXT).toContain('remote-operation.throttling');
   });

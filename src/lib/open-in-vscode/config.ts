@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { parse as parseYaml } from 'yaml';
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -19,7 +20,7 @@ export interface OpenInVscodeSettings {
 }
 
 export function defaultSettingsPath(home: string = homedir()): string {
-  return join(home, '.tfscripts', 'open-in-vscode', 'settings.json');
+  return join(home, '.tfscripts', 'open-in-vscode', 'settings.yml');
 }
 
 function expandHome(path: string, home: string): string {
@@ -54,9 +55,9 @@ export function tryLoadSettings(deps: LoadSettingsDeps): OpenInVscodeSettings | 
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(raw) as unknown;
+    parsed = parseYaml(raw) as unknown;
   } catch {
-    throw new ConfigError(`Invalid JSON in settings file: ${deps.settingsPath}`);
+    throw new ConfigError(`Invalid YAML in settings file: ${deps.settingsPath}`);
   }
 
   if (parsed === null || typeof parsed !== 'object' || !('path-configs' in parsed)) {

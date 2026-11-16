@@ -1,18 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { stringify } from 'yaml';
 import { ConfigError, defaultSettingsPath, resolveOpenPath, tryLoadSettings } from './config.js';
 
 describe('defaultSettingsPath', () => {
-  it('resolves under ~/.tfscripts/open-in-vscode/settings.json', () => {
-    expect(defaultSettingsPath('/home/me')).toBe(
-      '/home/me/.tfscripts/open-in-vscode/settings.json',
-    );
+  it('resolves under ~/.tfscripts/open-in-vscode/settings.yml', () => {
+    expect(defaultSettingsPath('/home/me')).toBe('/home/me/.tfscripts/open-in-vscode/settings.yml');
   });
 });
 
 describe('tryLoadSettings', () => {
   it('returns null when the settings file is missing', () => {
     const settings = tryLoadSettings({
-      settingsPath: '/missing.json',
+      settingsPath: '/missing.yml',
       home: '/Users/me',
       readFile: () => {
         const err = new Error('ENOENT') as NodeJS.ErrnoException;
@@ -25,10 +24,10 @@ describe('tryLoadSettings', () => {
 
   it('loads path-configs, expands ~, and rejects duplicate aliases', () => {
     const settings = tryLoadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           'path-configs': [
             { path: '~/code/foo', alias: 'foo' },
             { path: '/abs/bar', alias: 'bar' },
@@ -45,10 +44,10 @@ describe('tryLoadSettings', () => {
 
     expect(() =>
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'path-configs': [
               { path: '/a', alias: 'x' },
               { path: '/b', alias: 'x' },
@@ -58,10 +57,10 @@ describe('tryLoadSettings', () => {
     ).toThrow(/duplicate alias "x"/i);
   });
 
-  it('throws on invalid JSON or schema', () => {
+  it('throws on invalid YAML or schema', () => {
     expect(() =>
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () => '{not-json',
       }),
@@ -69,25 +68,25 @@ describe('tryLoadSettings', () => {
 
     expect(() =>
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({}),
+        readFile: () => stringify({}),
       }),
     ).toThrow(/path-configs/);
 
     expect(() =>
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ 'path-configs': [{ path: '', alias: 'x' }] }),
+        readFile: () => stringify({ 'path-configs': [{ path: '', alias: 'x' }] }),
       }),
     ).toThrow(/path/);
 
     expect(() =>
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ 'path-configs': [{ path: '/a', alias: '' }] }),
+        readFile: () => stringify({ 'path-configs': [{ path: '/a', alias: '' }] }),
       }),
     ).toThrow(/alias/);
   });
@@ -95,9 +94,9 @@ describe('tryLoadSettings', () => {
   it('allows an empty path-configs array', () => {
     expect(
       tryLoadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ 'path-configs': [] }),
+        readFile: () => stringify({ 'path-configs': [] }),
       }),
     ).toEqual({ pathConfigs: [] });
   });
@@ -107,9 +106,9 @@ describe('resolveOpenPath', () => {
   it('resolves an alias when settings exist', () => {
     const resolved = resolveOpenPath('demo', {
       home: '/Users/me',
-      settingsPath: '/cfg.json',
+      settingsPath: '/cfg.yml',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           'path-configs': [{ path: '~/tmp/demo', alias: 'demo' }],
         }),
     });
@@ -120,7 +119,7 @@ describe('resolveOpenPath', () => {
     expect(
       resolveOpenPath('~/repos/app', {
         home: '/Users/me',
-        settingsPath: '/missing.json',
+        settingsPath: '/missing.yml',
         readFile: () => {
           const err = new Error('ENOENT') as NodeJS.ErrnoException;
           err.code = 'ENOENT';
@@ -132,9 +131,9 @@ describe('resolveOpenPath', () => {
     expect(
       resolveOpenPath('/tmp/demo', {
         home: '/Users/me',
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'path-configs': [{ path: '/other', alias: 'other' }],
           }),
       }),

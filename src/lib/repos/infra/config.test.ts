@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { stringify } from 'yaml';
 import {
   DEFAULT_REMOTE_OPERATION_THROTTLING_SECONDS,
   defaultSettingsPath,
@@ -7,18 +8,18 @@ import {
 } from './config.js';
 
 describe('defaultSettingsPath', () => {
-  it('resolves under ~/.tfscripts/repos/settings.json', () => {
-    expect(defaultSettingsPath('/home/me')).toBe('/home/me/.tfscripts/repos/settings.json');
+  it('resolves under ~/.tfscripts/repos/settings.yml', () => {
+    expect(defaultSettingsPath('/home/me')).toBe('/home/me/.tfscripts/repos/settings.yml');
   });
 });
 
 describe('loadSettings', () => {
   it('loads valid repos and expands ~ in paths', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           repos: [{ path: '~/code/foo' }, { path: '/abs/bar' }],
         }),
     });
@@ -35,9 +36,9 @@ describe('loadSettings', () => {
 
   it('defaults remote-operation.throttling to 10 seconds when omitted', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
-      readFile: () => JSON.stringify({ repos: [{ path: '/abs/bar' }] }),
+      readFile: () => stringify({ repos: [{ path: '/abs/bar' }] }),
     });
 
     expect(settings.remoteOperationThrottlingSeconds).toBe(10);
@@ -45,10 +46,10 @@ describe('loadSettings', () => {
 
   it('loads optional remote-operation.throttling as a positive integer', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           'remote-operation.throttling': 5,
           repos: [{ path: '/abs/bar' }],
         }),
@@ -60,10 +61,10 @@ describe('loadSettings', () => {
   it('rejects invalid remote-operation.throttling values', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'remote-operation.throttling': 0,
             repos: [{ path: '/abs/bar' }],
           }),
@@ -72,10 +73,10 @@ describe('loadSettings', () => {
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'remote-operation.throttling': 1.5,
             repos: [{ path: '/abs/bar' }],
           }),
@@ -84,10 +85,10 @@ describe('loadSettings', () => {
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'remote-operation.throttling': '10',
             repos: [{ path: '/abs/bar' }],
           }),
@@ -97,10 +98,10 @@ describe('loadSettings', () => {
 
   it('loads optional list.show-commit-count as a positive integer', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           'list.show-commit-count': 7,
           repos: [{ path: '/abs/bar' }],
         }),
@@ -112,10 +113,10 @@ describe('loadSettings', () => {
   it('rejects invalid list.show-commit-count values', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'list.show-commit-count': 0,
             repos: [{ path: '/abs/bar' }],
           }),
@@ -124,10 +125,10 @@ describe('loadSettings', () => {
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'list.show-commit-count': 1.5,
             repos: [{ path: '/abs/bar' }],
           }),
@@ -136,10 +137,10 @@ describe('loadSettings', () => {
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             'list.show-commit-count': '7',
             repos: [{ path: '/abs/bar' }],
           }),
@@ -149,10 +150,10 @@ describe('loadSettings', () => {
 
   it('loads per-repo environment and ssh-host next to path', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           repos: [
             { path: '/local/app' },
             {
@@ -177,10 +178,10 @@ describe('loadSettings', () => {
 
   it('loads optional ai-git-submit-parameters next to path', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           repos: [
             {
               path: '~/code/foo',
@@ -210,10 +211,10 @@ describe('loadSettings', () => {
   it('rejects non-array ai-git-submit-parameters', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', 'ai-git-submit-parameters': '--add yes' }],
           }),
       }),
@@ -223,10 +224,10 @@ describe('loadSettings', () => {
   it('rejects empty strings in ai-git-submit-parameters', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', 'ai-git-submit-parameters': ['--add yes', '  '] }],
           }),
       }),
@@ -235,10 +236,10 @@ describe('loadSettings', () => {
 
   it('uses optional name over path basename', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           repos: [
             {
               name: 'local-tfscripts',
@@ -266,10 +267,10 @@ describe('loadSettings', () => {
   it('rejects empty name', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', name: '  ' }],
           }),
       }),
@@ -278,10 +279,10 @@ describe('loadSettings', () => {
 
   it('loads optional after-update-commands next to path', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
       readFile: () =>
-        JSON.stringify({
+        stringify({
           repos: [
             {
               path: '~/code/foo',
@@ -308,10 +309,10 @@ describe('loadSettings', () => {
   it('rejects non-array after-update-commands', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', 'after-update-commands': 'npm install' }],
           }),
       }),
@@ -321,10 +322,10 @@ describe('loadSettings', () => {
   it('rejects empty strings in after-update-commands', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', 'after-update-commands': ['npm install', '  '] }],
           }),
       }),
@@ -333,9 +334,9 @@ describe('loadSettings', () => {
 
   it('defaults each repo environment to local', () => {
     const settings = loadSettings({
-      settingsPath: '/cfg/settings.json',
+      settingsPath: '/cfg/settings.yml',
       home: '/Users/me',
-      readFile: () => JSON.stringify({ repos: [{ path: '/abs/bar' }] }),
+      readFile: () => stringify({ repos: [{ path: '/abs/bar' }] }),
     });
 
     expect(settings.repos[0]).toEqual({
@@ -348,10 +349,10 @@ describe('loadSettings', () => {
   it('rejects invalid per-repo environment values', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', environment: 'cloud' }],
           }),
       }),
@@ -361,10 +362,10 @@ describe('loadSettings', () => {
   it('requires ssh-host when a repo environment is ssh', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', environment: 'ssh' }],
           }),
       }),
@@ -374,10 +375,10 @@ describe('loadSettings', () => {
   it('rejects empty ssh-host when environment is ssh', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', environment: 'ssh', 'ssh-host': '  ' }],
           }),
       }),
@@ -387,10 +388,10 @@ describe('loadSettings', () => {
   it('rejects ssh-host when environment is local', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () =>
-          JSON.stringify({
+          stringify({
             repos: [{ path: '/abs/bar', environment: 'local', 'ssh-host': 'devbox' }],
           }),
       }),
@@ -400,7 +401,7 @@ describe('loadSettings', () => {
   it('throws when the settings file is missing', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/missing.json',
+        settingsPath: '/missing.yml',
         home: '/Users/me',
         readFile: () => {
           const err = new Error('ENOENT') as NodeJS.ErrnoException;
@@ -411,7 +412,7 @@ describe('loadSettings', () => {
     ).toThrow(ConfigError);
     expect(() =>
       loadSettings({
-        settingsPath: '/missing.json',
+        settingsPath: '/missing.yml',
         home: '/Users/me',
         readFile: () => {
           const err = new Error('ENOENT') as NodeJS.ErrnoException;
@@ -422,30 +423,30 @@ describe('loadSettings', () => {
     ).toThrow(/Settings file not found/);
   });
 
-  it('throws on invalid JSON', () => {
+  it('throws on invalid YAML', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
         readFile: () => '{not-json',
       }),
-    ).toThrow(/Invalid JSON/);
+    ).toThrow(/Invalid YAML/);
   });
 
   it('throws when repos is missing or empty', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({}),
+        readFile: () => stringify({}),
       }),
     ).toThrow(/repos/);
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ repos: [] }),
+        readFile: () => stringify({ repos: [] }),
       }),
     ).toThrow(/at least one/);
   });
@@ -453,17 +454,17 @@ describe('loadSettings', () => {
   it('throws when a repo path is missing or empty', () => {
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ repos: [{ path: '' }] }),
+        readFile: () => stringify({ repos: [{ path: '' }] }),
       }),
     ).toThrow(/path/);
 
     expect(() =>
       loadSettings({
-        settingsPath: '/cfg.json',
+        settingsPath: '/cfg.yml',
         home: '/Users/me',
-        readFile: () => JSON.stringify({ repos: [{}] }),
+        readFile: () => stringify({ repos: [{}] }),
       }),
     ).toThrow(/path/);
   });

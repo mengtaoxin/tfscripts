@@ -11,14 +11,13 @@ Options:
   --reuse-window <yes|no>     Reuse an existing VS Code window if possible
                               (default: yes). Use "no" to force a new window.
 
-Aliases are read from ~/.tfscripts/open-in-vscode/settings.json, for example:
+Aliases are read from ~/.tfscripts/open-in-vscode/settings.yml, for example:
 
-  {
-    "path-configs": [
-      { "path": "/tmp/demo", "alias": "demo" },
-      { "path": "~/repos/app", "alias": "app" }
-    ]
-  }
+  path-configs:
+    - path: /tmp/demo
+      alias: demo
+    - path: ~/repos/app
+      alias: app
 
 When --path matches an alias, that configured path is used. Otherwise the
 value is treated as a filesystem path (~ is expanded).

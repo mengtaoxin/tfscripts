@@ -8,24 +8,23 @@ Usage:
   repos <command>
   repos <command> --help
 
-Reads the repo list from ~/.tfscripts/repos/settings.json, for example:
+Reads the repo list from ~/.tfscripts/repos/settings.yml, for example:
 
-  {
-    "list.show-commit-count": 7,
-    "remote-operation.throttling": 10,
-    "repos": [
-      { "path": "/exampleDir/repo-1" },
-      { "path": "~/repos/repo-2" },
-      {
-        "name": "local-tfscripts",
-        "path": "~/repos/repo-3",
-        "environment": "ssh",
-        "ssh-host": "devbox",
-        "ai-git-submit-parameters": ["--add yes", "--push yes"],
-        "after-update-commands": ["npm install", "npm run build"]
-      }
-    ]
-  }
+  "list.show-commit-count": 7
+  "remote-operation.throttling": 10
+  repos:
+    - path: /exampleDir/repo-1
+    - path: ~/repos/repo-2
+    - name: local-tfscripts
+      path: ~/repos/repo-3
+      environment: ssh
+      ssh-host: devbox
+      ai-git-submit-parameters:
+        - "--add yes"
+        - "--push yes"
+      after-update-commands:
+        - npm install
+        - npm run build
 
 Each entry needs "path". The display name defaults to the folder name; optional
 "name" overrides it.
@@ -82,7 +81,7 @@ Optional after-update-commands run in the repo path only when status is
 updated (local sh -c, or ssh+sh for environment ssh). Failures show in
 an AFTER UPDATE column and do not change the exit code.
 
-Reads ~/.tfscripts/repos/settings.json.
+Reads ~/.tfscripts/repos/settings.yml.
 `;
 
 export const HELP_CHECK = `repos check — fetch and show status for configured repos
@@ -106,7 +105,7 @@ row instead of fetching again.
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
 
-Reads ~/.tfscripts/repos/settings.json.
+Reads ~/.tfscripts/repos/settings.yml.
 `;
 
 export const HELP_LIST = `repos list — list configured repos
@@ -118,7 +117,7 @@ Usage:
 
 Shows configured repos as a REPO / PATH table. Does not touch git.
 
-Reads ~/.tfscripts/repos/settings.json.
+Reads ~/.tfscripts/repos/settings.yml.
 
 Examples:
   repos list
@@ -140,7 +139,7 @@ omitted --add/--push/--protect-main use ai-git-submit defaults.
 For environment ssh, git runs on the remote host (key-based auth only);
 the LLM API uses AI_GIT_SUBMIT_* from the local process environment.
 
-Reads ~/.tfscripts/repos/settings.json.
+Reads ~/.tfscripts/repos/settings.yml.
 
 Examples:
   repos submit --name tfscripts
