@@ -38,9 +38,11 @@ Optional per-repo fields (siblings of path):
   ai-git-submit-parameters   Argv fragments for repos submit (ai-git-submit flags)
   after-update-commands     Shell commands run in the repo path after status updated
 
-SSH mode runs git on the remote host with key-based auth only (no password
-prompts). Unknown host fingerprints are not auto-accepted; that repo fails
-with a warning row in the result table, and other repos still run.
+SSH mode runs git on the remote host under a login shell (remote profile
+env such as GH_TOKEN is available; SSH login itself is key-based only, no
+password prompts). Local repos use the local process env. Unknown host
+fingerprints are not auto-accepted; that repo fails with a warning row in
+the result table, and other repos still run.
 
 Commands:
   update  Fetch and merge current-branch upstream updates
@@ -76,6 +78,8 @@ row instead of fetching again.
 
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
+Remote git runs under a login shell so remote profile env (e.g. GH_TOKEN)
+is available; local repos use the local process env.
 
 Optional after-update-commands run in the repo path only when status is
 updated (local sh -c, or ssh+sh for environment ssh). Failures show in
@@ -104,6 +108,8 @@ row instead of fetching again.
 
 Entries may set environment/ssh-host next to path for remote repos over
 SSH (key-based login only; fingerprint prompts are not auto-accepted).
+Remote git runs under a login shell so remote profile env (e.g. GH_TOKEN)
+is available; local repos use the local process env.
 
 Reads ~/.tfscripts/repos/settings.yml.
 `;
@@ -136,8 +142,11 @@ non-interactive. Optional per-repo ai-git-submit-parameters (argv
 fragments such as "--add yes") are parsed like ai-git-submit flags;
 omitted --add/--push/--protect-main use ai-git-submit defaults.
 
-For environment ssh, git runs on the remote host (key-based auth only);
-the LLM API uses AI_GIT_SUBMIT_* from the local process environment.
+For environment ssh, git runs on the remote host under a login shell
+(so remote profile env such as GH_TOKEN is available; SSH login itself
+is key-based only). Local repos use the local process env (including
+GH_TOKEN). The LLM API uses AI_GIT_SUBMIT_* from the local process
+environment.
 
 Reads ~/.tfscripts/repos/settings.yml.
 

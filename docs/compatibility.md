@@ -15,7 +15,7 @@ Primary target is **macOS**. Node.js 22+ everywhere. This page lists each CLI’
 
 Platform gates use `assertSupportedPlatform` in `src/lib/cli/platform.ts`. Help still runs on unsupported hosts.
 
-`repos` settings may use `~` paths. Per-repo `environment` / `ssh-host` can run git over SSH (BatchMode); that needs OpenSSH-compatible `ssh` and a matching `~/.ssh/config` host. Optional fields (`ai-git-submit-parameters`, `after-update-commands`) are documented in `repos` help and `src/lib/repos/infra/config.ts`.
+`repos` settings may use `~` paths. Per-repo `environment` / `ssh-host` can run git over SSH (BatchMode); that needs OpenSSH-compatible `ssh` and a matching `~/.ssh/config` host. Remote git is invoked via `bash -lc` so the remote login profile can supply `GH_TOKEN` (and similar); local repos inherit the local process environment. Optional fields (`ai-git-submit-parameters`, `after-update-commands`) are documented in `repos` help and `src/lib/repos/infra/config.ts`.
 
 ## Tooling
 

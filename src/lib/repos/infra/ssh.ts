@@ -37,6 +37,15 @@ function shellSingleQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+/**
+ * Run remote argv under a login shell so profile env (e.g. GH_TOKEN from
+ * ~/.profile) is available. Non-interactive `ssh host -- git …` skips that.
+ */
+export function remoteLoginShellArgs(commandArgs: readonly string[]): string[] {
+  const script = commandArgs.map(shellSingleQuote).join(' ');
+  return ['bash', '-lc', script];
+}
+
 export function sshInvocationArgs(host: string, remoteArgs: readonly string[]): string[] {
   return [...SSH_OPTIONS, host, '--', ...remoteArgs.map(shellSingleQuote)];
 }
@@ -175,7 +184,12 @@ export function createSshGitDeps(host: string, deps: SshExecDeps = {}): GitDeps 
     if (remoteCwd === undefined || remoteCwd === '') {
       throw new Error('SSH git requires cwd (remote repo path)');
     }
-    return runSsh(host, ['git', '-C', remoteCwd, ...args], deps, options?.maxBuffer);
+    return runSsh(
+      host,
+      remoteLoginShellArgs(['git', '-C', remoteCwd, ...args]),
+      deps,
+      options?.maxBuffer,
+    );
   };
 
   const execFileWithStdin: ExecFileWithStdinFn = async (file, args, stdin, options) => {
@@ -186,7 +200,12 @@ export function createSshGitDeps(host: string, deps: SshExecDeps = {}): GitDeps 
     if (remoteCwd === undefined || remoteCwd === '') {
       throw new Error('SSH git requires cwd (remote repo path)');
     }
-    await runSshWithStdin(host, ['git', '-C', remoteCwd, ...args], stdin, deps);
+    await runSshWithStdin(
+      host,
+      remoteLoginShellArgs(['git', '-C', remoteCwd, ...args]),
+      stdin,
+      deps,
+    );
   };
 
   return {

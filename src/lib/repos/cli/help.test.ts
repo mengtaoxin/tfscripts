@@ -18,6 +18,8 @@ describe('HELP_TEXT', () => {
     expect(HELP_TEXT).toContain('name: local-tfscripts');
     expect(HELP_TEXT).toContain('list.show-commit-count');
     expect(HELP_TEXT).toContain('remote-operation.throttling');
+    expect(HELP_TEXT).toContain('GH_TOKEN');
+    expect(HELP_TEXT).toContain('login shell');
   });
 });
 

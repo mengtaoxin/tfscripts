@@ -5,6 +5,7 @@ import {
   createSshAccessPath,
   createSshGitDeps,
   createSshExecEnv,
+  remoteLoginShellArgs,
   resolveRemoteHome,
   sshInvocationArgs,
 } from './ssh.js';
@@ -122,7 +123,15 @@ describe('ssh helpers', () => {
     ).toBe('SSH authentication failed (key-based login required)');
   });
 
-  it('runs git over ssh with -C remote path and no local cwd', async () => {
+  it('wraps argv in bash -lc so a remote login shell can load profile env', () => {
+    expect(remoteLoginShellArgs(['git', '-C', '/remote/repo', 'push'])).toEqual([
+      'bash',
+      '-lc',
+      "'git' '-C' '/remote/repo' 'push'",
+    ]);
+  });
+
+  it('runs git over ssh under a remote login shell with -C path and no local cwd', async () => {
     const execFile = vi.fn().mockResolvedValue({ stdout: 'main\n', stderr: '' });
     const git = createSshGitDeps('devbox', { execFile: execFile as ExecFileFn });
 
@@ -130,14 +139,10 @@ describe('ssh helpers', () => {
 
     expect(execFile).toHaveBeenCalledWith(
       'ssh',
-      sshInvocationArgs('devbox', [
-        'git',
-        '-C',
-        '/remote/repo',
-        'rev-parse',
-        '--abbrev-ref',
-        'HEAD',
-      ]),
+      sshInvocationArgs(
+        'devbox',
+        remoteLoginShellArgs(['git', '-C', '/remote/repo', 'rev-parse', '--abbrev-ref', 'HEAD']),
+      ),
       expect.objectContaining({
         env: expect.objectContaining({ SSH_ASKPASS_REQUIRE: 'never' }),
       }),
@@ -146,7 +151,7 @@ describe('ssh helpers', () => {
     expect(options.cwd).toBeUndefined();
   });
 
-  it('runs git commit over ssh with stdin for -F -', async () => {
+  it('runs git commit over ssh under a remote login shell with stdin for -F -', async () => {
     const execFileWithStdin = vi.fn().mockResolvedValue(undefined);
     const git = createSshGitDeps('devbox', { execFileWithStdin });
 
@@ -156,7 +161,10 @@ describe('ssh helpers', () => {
 
     expect(execFileWithStdin).toHaveBeenCalledWith(
       'ssh',
-      sshInvocationArgs('devbox', ['git', '-C', '/remote/repo', 'commit', '-F', '-']),
+      sshInvocationArgs(
+        'devbox',
+        remoteLoginShellArgs(['git', '-C', '/remote/repo', 'commit', '-F', '-']),
+      ),
       'feat: hello\n',
       expect.objectContaining({
         env: expect.objectContaining({ SSH_ASKPASS_REQUIRE: 'never' }),

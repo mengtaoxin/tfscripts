@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { resolveRepoTarget } from './repo-target.js';
-import { sshInvocationArgs } from './ssh.js';
+import { remoteLoginShellArgs, sshInvocationArgs } from './ssh.js';
 import type { ExecFileFn } from '../../git/exec.js';
 
 describe('resolveRepoTarget', () => {
@@ -38,7 +38,10 @@ describe('resolveRepoTarget', () => {
     await resolved.git.execFile!('git', ['status'], { cwd: resolved.entry.path });
     expect(execFile).toHaveBeenCalledWith(
       'ssh',
-      sshInvocationArgs('devbox', ['git', '-C', '/home/me/code/foo', 'status']),
+      sshInvocationArgs(
+        'devbox',
+        remoteLoginShellArgs(['git', '-C', '/home/me/code/foo', 'status']),
+      ),
       expect.any(Object),
     );
   });
